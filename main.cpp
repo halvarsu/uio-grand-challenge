@@ -18,6 +18,9 @@ double viscousForce(double eng, double v1, double v2);
 
 void writeArrayToFile(ofstream& outFile, double * array, int numBlocks);
 
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
 
 int main() // This function runs when you execute the program.
 {
