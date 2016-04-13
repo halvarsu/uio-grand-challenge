@@ -35,7 +35,7 @@ int main() // This function runs when you execute the program.
 	double vPusher			= 4e-4;
 	double kPusher			= 4e6;
 
-	double k			= 2.3e6*numBlocks/70; 			// Stiffness between blocks (now for numBlocks amount of blocks)
+	double k			= 2.3e6*numBlocks/70; 		// Stiffness between blocks (now for numBlocks amount of blocks)
 	double L			= 0.14; 			// Physical length of block chain
 	double d			= L/(numBlocks-1); 	        // Distance between blocks in block chain
 	double M			= 0.12;
