@@ -105,13 +105,8 @@ def get_args():
     parser.add_argument("-g", "--plot_gradient", action="store_true",
                         help="Overlay the gradient on the 3d surface")
     parser.add_argument("-cmap", "--colormap", help="Set the colormap",
-<<<<<<< HEAD
-                        choices=[m for m in mp.cm.cmap_d], default='viridis')
-    parser.add_argument("-G", "--grid_size", nargs=2, default=[20, 20],
-=======
                         choices=mp.cm.cmap_d, default='viridis')
-    parser.add_argument("-G", "--grid_size", nargs=2, default=[100, 70],
->>>>>>> 89b38fc5ec207d75169fd2a1c647865f29963d84
+    parser.add_argument("-G", "--grid_size", nargs=2, default=[20, 20],
                         help="Define rstride and cstride", type=int)
     parser.add_argument("-a", "--alpha", type=float, default=1,
                         help="Define the alpha level")
