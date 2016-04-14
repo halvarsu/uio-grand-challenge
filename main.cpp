@@ -6,11 +6,32 @@
 #include <fstream>
 #include <cmath>
 #include <time.h>
+#include <vector>
 
 using namespace std;
 
+struct params{
+	double vPusher ;    
+	double kPusher ;    
+	double k       ;    
+	double L       ;    
+	double d       ;    
+	double M       ;    
+	double m       ;
+	double eng     ;
+	double t       ;
+	double mu_s    ;
+	double mu_d    ;
+	double k_0     ;
+	double f_N     ;
+	double time_limit; // Crap, misaligned
+	vector<bool> start_positions; // Even worse!
+	vector<double> states  ;
+	vector<double> timers;
+};
+
 // Forward declare functions
-void calculateForces(double t, double k, double d, double eng, double kPusher, double vPusher, double * forces, double * positions, double * velocities, int numBlocks);
+void calculateForces(params & blocks, double * forces, double * positions, double * velocities, int numBlocks);
 
 void integrate(double dt, double m, double * forces, double * positions, double * velocities, int numBlocks);
 
@@ -20,6 +41,7 @@ double viscousForce(double eng, double v1, double v2);
 
 void writeArrayToFile(ofstream & outFile, double * array, int numBlocks);
 
+double frictionForce(params & blocks, int i, double x, double v);
 template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
@@ -29,24 +51,26 @@ int main() // This function runs when you execute the program.
 	clock_t start, end;
 	start = clock();
 	// Choose parameters
+	
 	const int numBlocks		= 70;
-	double dt			= 1e-7;
-	double tStop			= 0.01;
-	double t			= 0;
-        
+	const double dt	   		= 1e-7;
+	const double tStop 		= 0.01;
 
-	double vPusher			= 4e-4;
-	double kPusher			= 4e6;
-
-	double k			= 2.3e6*numBlocks/70; 		
-        // Stiffness between blocks (now for numBlocks amount of blocks)
-	double L			= 0.14; 			
-        // Physical length of block chain
-	double d			= L/(numBlocks-1); 	        
-        // Distance between blocks in block chain
-	double M			= 0.12;
-	double m			= M/numBlocks;
-        double eng                      = sqrt(0.1)*sqrt(k*m);
+	params blocks;
+	blocks.t                = 0;
+	blocks.vPusher			= 4e-4;
+	blocks.kPusher			= 4e6;
+	blocks.k				= 2.3e6; // Stiffness between blocks
+	blocks.L				= 0.14; // Physical length of block chain
+	blocks.d				= blocks.L/(numBlocks-1); // Distance between blocks in block chain
+	blocks.M				= 0.12;
+	blocks.m				= blocks.M/numBlocks;
+	blocks.eng              = sqrt(0.1)*sqrt(blocks.k*blocks.m);
+	blocks.time_limit       = 0.00001; // Unknown value
+	blocks.mu_s             = 1;  // Unknown value
+	blocks.mu_d             = 1;  // Unknown value
+	blocks.k_0              = 1;  // Unknown value
+	blocks.f_N              = 1;  // Unknown value
 
 	int writeFrequency		= 10;
 
@@ -64,24 +88,27 @@ int main() // This function runs when you execute the program.
 	// Initialize arrays
 	for (int i = 0; i<numBlocks; i++)
 	{
-		positions[i] = d*i;
+		positions[i] = blocks.d*i;
 		velocities[i] = 0;
 		forces[i] = 0;
+		blocks.states.push_back(true);
+		blocks.timers.push_back(0);
+		blocks.start_positions.push_back(i);
 	}
 
 	int counter = 0;
-	while (t<tStop)
+	while (blocks.t<tStop)
 	{
 		// Calculate forces
-		calculateForces(t, k, d, eng, kPusher, vPusher, forces, positions, velocities, numBlocks);
-		integrate(dt, m, forces, positions, velocities, numBlocks);
+		calculateForces(blocks, forces, positions, velocities, numBlocks);
+		integrate(dt, blocks.m, forces, positions, velocities, numBlocks);
 
 		// modulo operation to check whether to write output to file on this timestep
 		if ( (counter%writeFrequency) == 0)
 		{
 			writeArrayToFile(outFilePositions, positions, numBlocks);
 		}
-		t += dt;
+		blocks.t += dt;
 		counter ++;
 	}
 	end = clock();
@@ -90,13 +117,13 @@ int main() // This function runs when you execute the program.
 	outFileParameters << "nx " << numBlocks << "\n";
 	outFileParameters << "dt " << dt << "\n";
 	outFileParameters << "tStop " << tStop << "\n";
-	outFileParameters << "vPusher " << vPusher << "\n";
-	outFileParameters << "kPusher " << kPusher << "\n";
-	outFileParameters << "k " << k << "\n";
-	outFileParameters << "L " << L << "\n";
-	outFileParameters << "M " << M << "\n";
-	outFileParameters << "m " << m << "\n";
-	outFileParameters << "eng " << eng << "\n";
+	outFileParameters << "vPusher " << blocks.vPusher << "\n";
+	outFileParameters << "kPusher " << blocks.kPusher << "\n";
+	outFileParameters << "k " << blocks.k << "\n";
+	outFileParameters << "L " << blocks.L << "\n";
+	outFileParameters << "M " << blocks.M << "\n";
+	outFileParameters << "m " << blocks.m << "\n";
+	outFileParameters << "eng " << blocks.eng << "\n";
 
 	// Close output files
 	outFilePositions.close();
@@ -108,7 +135,7 @@ int main() // This function runs when you execute the program.
 
 }
 
-void calculateForces(double t, double k, double d, double eng, double kPusher, double vPusher, double * forces, double * positions, double * velocities, int numBlocks)
+void calculateForces(params & blocks, double * forces, double * positions, double * velocities, int numBlocks)
  {
 	// Reset forces
 	for (int i = 0; i<numBlocks; i++)
@@ -117,24 +144,27 @@ void calculateForces(double t, double k, double d, double eng, double kPusher, d
 	}
 
 	// First block
-	double pusherPosition = vPusher*t;
-	forces[0] += springForce(k, d, positions[0], positions[1]) + 
-                     springForce(kPusher, 0, positions[0], pusherPosition) + 
-                     viscousForce(eng, velocities[0], velocities[1]);
+	double pusherPosition = blocks.vPusher*blocks.t;
+	forces[0] += springForce(blocks.k, blocks.d, positions[0], positions[1]) +
+		springForce(blocks.kPusher, 0, positions[0], pusherPosition) +
+		viscousForce(blocks.eng, velocities[0], velocities[1]) +
+		frictionForce(blocks, 0, positions[0], velocities[0]);
         //- viscousForce(eng,velocities[0],velocities[1]);
 
 	// Middle blocks
 	for (int i = 1; i<numBlocks-1; i++)
 	{
-		forces[i] += springForce(k, d, positions[i], positions[i+1])
-			    -springForce(k, d, positions[i-1], positions[i])   
-                            +viscousForce(eng, velocities[i], velocities[i+1]) 
-                            -viscousForce(eng,velocities[i-1],velocities[i]);
+		forces[i] += springForce(blocks.k, blocks.d, positions[i], positions[i+1])
+			-springForce(blocks.k, blocks.d, positions[i-1], positions[i])
+			+viscousForce(blocks.eng, velocities[i], velocities[i+1])
+			-viscousForce(blocks.eng, velocities[i-1],velocities[i]);
+		forces[i] += frictionForce(blocks, i, positions[i], velocities[i]);
 	}
 
 	// Last block
-	forces[numBlocks-1] += springForce(k, -d, positions[numBlocks-1], positions[numBlocks-2])
-                             - viscousForce(eng, velocities[numBlocks-1], velocities[numBlocks-2]);
+	forces[numBlocks-1] += springForce(blocks.k, -blocks.d, positions[numBlocks-1], positions[numBlocks-2])
+                             - viscousForce(blocks.eng, velocities[numBlocks-1], velocities[numBlocks-2])
+		+ frictionForce(blocks, numBlocks-1, positions[numBlocks-1], velocities[numBlocks-1]);
 }
 
 void integrate(double dt, double mass, double * forces, double * positions, double * velocities, int numBlocks)
@@ -157,6 +187,33 @@ double viscousForce(double eng, double v1, double v2)
         return eng*(v2-v1);
 }
 
+double frictionForce(params & blocks, int i, double x, double v)
+{
+	double friction = 0;
+	return friction; // Remove me to activate friction
+	
+	// If the 'string' is attached, check if it is still to be attached
+	if (blocks.states[i]) {
+		friction = springForce(blocks.k_0, 0, blocks.start_positions[i], x);
+		if (friction > blocks.mu_s * blocks.f_N) {
+			blocks.states[i] = false;     // Change state
+			blocks.timers[i] = blocks.t;  // Start timer
+		}
+	}
+
+	// If the string is subsequently not attached
+	if (!blocks.states[i]) {
+		friction = -blocks.mu_d * blocks.f_N * sgn(v);
+		blocks.timers[i]++;
+
+		// Check the timer
+		if (blocks.timers[i] < blocks.time_limit) {
+			blocks.states[i] = true;
+		}
+	}
+	return friction;
+
+}
 void writeArrayToFile(ofstream & outFile, double * array, int numBlocks)
 {
 	outFile.write(reinterpret_cast<char*>(array), numBlocks*sizeof(double));
