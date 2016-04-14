@@ -87,6 +87,7 @@ class FrictionAnalyser:
 
         plt.xlabel('Block index')
         plt.ylabel('Time step')
+        plt.savefig("output/data.png")
         plt.show()
 
     def plot(self, args):

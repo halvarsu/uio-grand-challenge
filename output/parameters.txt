@@ -1,2 +1,10 @@
 nx 70
 dt 1e-07
+tStop 0.01
+vPusher 0.0004
+kPusher 4e+06
+k 2.3e+06
+L 0.14
+M 0.12
+m 0.00171429
+eng 19.8566
