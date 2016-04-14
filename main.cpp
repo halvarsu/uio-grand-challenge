@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <time.h>
 
 using namespace std;
 
@@ -25,6 +26,8 @@ template <typename T> int sgn(T val) {
 
 int main() // This function runs when you execute the program.
 {
+	clock_t start, end;
+	start = clock();
 	// Choose parameters
 	const int numBlocks		= 70;
 	double dt			= 1e-7;
@@ -81,8 +84,9 @@ int main() // This function runs when you execute the program.
 		t += dt;
 		counter ++;
 	}
+	end = clock();
 
-	// Output parameters to file
+		// Output parameters to file
 	outFileParameters << "nx " << numBlocks << "\n";
 	outFileParameters << "dt " << dt << "\n";
 	outFileParameters << "tStop " << tStop << "\n";
@@ -94,14 +98,14 @@ int main() // This function runs when you execute the program.
 	outFileParameters << "m " << m << "\n";
 	outFileParameters << "eng " << eng << "\n";
 
-	// .. fill in the rest of the parameters
-
 	// Close output files
 	outFilePositions.close();
 	outFileParameters.close();
 
-	cout << "Ran " << counter << " integration steps" << endl;
+	cout << "Ran " << counter << " integration steps in " << ((double)end - (double)start)/
+		CLOCKS_PER_SEC << " seconds" << endl;
 	return 0;
+
 }
 
 void calculateForces(double t, double k, double d, double eng, double kPusher, double vPusher, double * forces, double * positions, double * velocities, int numBlocks)
