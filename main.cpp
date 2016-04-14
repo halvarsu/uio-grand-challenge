@@ -9,7 +9,7 @@
 using namespace std;
 
 // Forward declare functions
-void calculateForces(double t, double k, double d, double eng, double kPusher, double vPusher, double* forces, double* positions, double* velocities, int numBlocks);
+void calculateForces(double t, double k, double d, double eng, double kPusher, double vPusher, double * forces, double * positions, double * velocities, int numBlocks);
 
 void integrate(double dt, double m, double * forces, double * positions, double * velocities, int numBlocks);
 
@@ -17,7 +17,7 @@ double springForce(double k, double d, double x1, double x2);
 
 double viscousForce(double eng, double v1, double v2);
 
-void writeArrayToFile(ofstream& outFile, double * array, int numBlocks);
+void writeArrayToFile(ofstream & outFile, double * array, int numBlocks);
 
 template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
@@ -35,9 +35,12 @@ int main() // This function runs when you execute the program.
 	double vPusher			= 4e-4;
 	double kPusher			= 4e6;
 
-	double k			= 2.3e6*numBlocks/70; 		// Stiffness between blocks (now for numBlocks amount of blocks)
-	double L			= 0.14; 			// Physical length of block chain
-	double d			= L/(numBlocks-1); 	        // Distance between blocks in block chain
+	double k			= 2.3e6*numBlocks/70; 		
+        // Stiffness between blocks (now for numBlocks amount of blocks)
+	double L			= 0.14; 			
+        // Physical length of block chain
+	double d			= L/(numBlocks-1); 	        
+        // Distance between blocks in block chain
 	double M			= 0.12;
 	double m			= M/numBlocks;
         double eng                      = sqrt(0.1)*sqrt(k*m);
@@ -82,6 +85,15 @@ int main() // This function runs when you execute the program.
 	// Output parameters to file
 	outFileParameters << "nx " << numBlocks << "\n";
 	outFileParameters << "dt " << dt << "\n";
+	outFileParameters << "tStop " << tStop << "\n";
+	outFileParameters << "vPusher " << vPusher << "\n";
+	outFileParameters << "kPusher " << kPusher << "\n";
+	outFileParameters << "k " << k << "\n";
+	outFileParameters << "L " << L << "\n";
+	outFileParameters << "M " << M << "\n";
+	outFileParameters << "m " << m << "\n";
+	outFileParameters << "eng " << eng << "\n";
+
 	// .. fill in the rest of the parameters
 
 	// Close output files
@@ -93,7 +105,7 @@ int main() // This function runs when you execute the program.
 }
 
 void calculateForces(double t, double k, double d, double eng, double kPusher, double vPusher, double * forces, double * positions, double * velocities, int numBlocks)
-{
+ {
 	// Reset forces
 	for (int i = 0; i<numBlocks; i++)
 	{
