@@ -20,28 +20,7 @@ class FrictionAnalyser:
         fileContents = ifile.readlines()
         for line in fileContents:
             words = line.split()
-            if words[0] == "nx":
-                self.nx = float(words[1])
-            elif words[0] == "dt":
-                self.dt = float(words[1])
-            elif words[0] == "tStop":
-                self.tStop = float(words[1])
-            elif words[0] == "vPusher":
-                self.vPusher = float(words[1])
-            elif words[0] == "kPusher":
-                self.kPusher = float(words[1])
-            elif words[0] == "k":
-                self.k = float(words[1])
-            elif words[0] == "L":
-                self.L = float(words[1])
-            elif words[0] == "M":
-                self.M = float(words[1])
-            elif words[0] == "m":
-                self.n = float(words[1])
-            elif words[0] == "eng":
-                self.eng = float(words[1])
-
-            # TODO: get more parameters from parameter file
+            exec("self.%s=%f" %(words[0],float(words[1])))
 
     def readData(self, data_file):
         self.data = np.fromfile(data_file)
