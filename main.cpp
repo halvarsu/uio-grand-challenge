@@ -102,7 +102,7 @@ int main() // This function runs when you execute the program.
 	outFilePositions.close();
 	outFileParameters.close();
 
-	cout << "Ran " << counter << " integration steps in " << ((double)end - (double)start)/
+	cout << "Ran " << counter << " integration steps for "<<numBlocks<<" blocks in " << ((double)end - (double)start)/
 		CLOCKS_PER_SEC << " seconds" << endl;
 	return 0;
 
