@@ -32,7 +32,7 @@ class FrictionAnalyser:
         self.data.resize(nt, self.nx)
 
     def pcolorplot(self, args):
-        plt.pcolormesh(self.data - self.data,
+        plt.pcolormesh(self.data - self.data[0],
                        cmap=mp.cm.get_cmap(args.colormap))
         plt.xlabel('Block index')
         plt.ylabel('Time step')
@@ -47,8 +47,8 @@ class FrictionAnalyser:
 
         # Settings for quick tweaking
         colormap = mp.cm.get_cmap(args.colormap)
-        rstep = shape[0] // 100
-        cstep = shape[1] // 70
+        rstep = shape[0] // args.grid_size[0]
+        cstep = shape[1] // args.grid_size[1]
 
         # Plot the surface
         x = np.linspace(0, shape[1], shape[1])
@@ -60,19 +60,27 @@ class FrictionAnalyser:
             # Compute the gradient
             Gx, Gy = np.gradient(Z)
             # Normalize the magnitude
-            G = (Gx**2+Gy**2)**0.5
-            N = G/G.max()
-            ax.plot_surface(X, Y, Z, shade=False,
-                            facecolors=colormap(N), linewidth=0,
-                            antialiased=True, rstride=rstep, cstride=cstep)
+            G = (Gx**2 + Gy**2)**0.5
+            N = G / G.max()
+            surf = ax.plot_surface(X, Y, Z, shade=False, alpha=args.alpha,
+                                   facecolors=colormap(N), linewidth=0,
+                                   antialiased=True, rstride=rstep, cstride=cstep)
         else:
-            ax.plot_surface(X, Y, Z, shade=True,
-                            cmap=colormap, linewidth=0,
-                            antialiased=True, rstride=rstep, cstride=cstep)
+            surf = ax.plot_surface(X, Y, Z, shade=True, alpha=args.alpha,
+                                   cmap=colormap, linewidth=0,
+                                   antialiased=True, rstride=rstep, cstride=cstep)
+
+        # Make a colorbar
+        m = mp.cm.ScalarMappable(cmap=colormap, norm=surf.norm)
+        m.set_array(G if 'G' in locals() else Z)  # The data which is colored
+        plt.colorbar(m)
+
         # Add contours
         if args.contour:
             ax.contourf(X, Y, Z, zdir='y', offset=y[-1], cmap=colormap)
             ax.contourf(X, Y, Z, zdir='x', offset=0, cmap=colormap)
+            # This line acts wierdly
+            # ax.contourf(X, Y, Z, zdir='z', cmap=colormap)
 
         plt.xlabel('Block index')
         plt.ylabel('Time step')
@@ -95,6 +103,10 @@ def get_args():
                         help="Overlay the gradient on the 3d surface")
     parser.add_argument("-cmap", "--colormap", help="Set the colormap",
                         choices=[m for m in mp.cm.cmap_d], default='viridis')
+    parser.add_argument("-G", "--grid_size", nargs=2, default=[100, 70],
+                        help="Define rstride and cstride", type=int)
+    parser.add_argument("-a", "--alpha", type=float, default=1,
+                        help="Define the alpha level")
     return parser.parse_args()
 
 
