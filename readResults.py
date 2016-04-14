@@ -24,6 +24,23 @@ class FrictionAnalyser:
                 self.nx = float(words[1])
             elif words[0] == "dt":
                 self.dt = float(words[1])
+            elif words[0] == "tStop":
+                self.tStop = float(words[1])
+            elif words[0] == "vPusher":
+                self.vPusher = float(words[1])
+            elif words[0] == "kPusher":
+                self.kPusher = float(words[1])
+            elif words[0] == "k":
+                self.k = float(words[1])
+            elif words[0] == "L":
+                self.L = float(words[1])
+            elif words[0] == "M":
+                self.M = float(words[1])
+            elif words[0] == "m":
+                self.n = float(words[1])
+            elif words[0] == "eng":
+                self.eng = float(words[1])
+
             # TODO: get more parameters from parameter file
 
     def readData(self, data_file):
@@ -102,7 +119,7 @@ def get_args():
     parser.add_argument("-g", "--plot_gradient", action="store_true",
                         help="Overlay the gradient on the 3d surface")
     parser.add_argument("-cmap", "--colormap", help="Set the colormap",
-                        choices=[m for m in mp.cm.cmap_d], default='viridis')
+                        choices=mp.cm.cmap_d, default='viridis')
     parser.add_argument("-G", "--grid_size", nargs=2, default=[100, 70],
                         help="Define rstride and cstride", type=int)
     parser.add_argument("-a", "--alpha", type=float, default=1,
