@@ -32,7 +32,6 @@ struct params{
 	vector<double> start_positions; // Even worse!
 	vector<double> states  ;
 	vector<double> timers;
-	vector<double> spring;
 
 	
 	friend ostream& operator <<(ostream& os, params const& blocks)
@@ -70,7 +69,7 @@ int main() // This function runs when you execute the program.
 
 	const int numBlocks		= 70;
 	const double dt	   		= 1e-7;
-	const double tStop 		= 0.01;
+	const double tStop 		= 0.05;
 
 	params blocks;
 	blocks.dt               = dt;
@@ -90,7 +89,7 @@ int main() // This function runs when you execute the program.
 	blocks.k_0              = sqrt(39.2e9/blocks.f_N);  // Unknown value
 
 
-	int writeFrequency		= 10;
+	int writeFrequency		= 50;
 
 	// Create output streams
 	ofstream outFilePositions("output/positions.bin");
@@ -112,7 +111,6 @@ int main() // This function runs when you execute the program.
 		forces[i] = 0;
 		blocks.states.push_back(STATIC); // True mean static friction
 		blocks.timers.push_back(0);
-		blocks.spring.push_back(0);
 		blocks.start_positions.push_back(blocks.d*i);
 	}
 
@@ -210,8 +208,7 @@ double viscousForce(double eng, double v1, double v2)
 double frictionForce(params & blocks, int i, double x, double v)
 {
 	double friction = 0;
-	//return friction; // Remove me to activate friction
-	// If the 'string' is attached, check if it is still to be attached
+
 	if (blocks.states[i]) {
 		friction = -springForce(blocks.k_0, 0, blocks.start_positions[i], x);
 		if (abs(friction) > blocks.mu_s * blocks.f_N) {

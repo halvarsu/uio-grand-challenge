@@ -47,10 +47,16 @@ class FrictionAnalyser:
         plt.show()
 
     def animate(self,args):
+        #Animates using 50 data points
         from animate import Blocks
         colormap = mp.cm.get_cmap(args.colormap)
-        blocks = Blocks(int(self.numBlocks), self.L, self.data[0::100],colormap)
-        blocks.animate(int(self.numBlocks))
+
+        point_count= 50
+        data_slice = int(self.data.shape[0]/point_count)
+        
+        blocks = Blocks(int(self.nx), self.L, self.data[0::data_slice],point_count,
+                        colormap)
+        blocks.animate(int(self.nx), save=True)
 
     def colorplot3d(self, args):
         fig = plt.figure()
@@ -137,5 +143,3 @@ if __name__ == "__main__":
     args = get_args()
     analyser = FrictionAnalyser(filenameParameters, filenamePositions)
     analyser.plot(args)
-    state_analyser = FrictionAnalyser(filenameParameters, filenameStates)
-    state_analyser.plot(args)
