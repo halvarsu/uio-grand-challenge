@@ -8,6 +8,9 @@
 #include <time.h>
 #include <vector>
 
+#define STATIC 1.0
+#define DYNAMIC 0.0
+
 using namespace std;
 
 struct params{
@@ -106,7 +109,7 @@ int main() // This function runs when you execute the program.
 		positions[i] = blocks.d*i;
 		velocities[i] = 0;
 		forces[i] = 0;
-		blocks.states.push_back(true); // True mean static friction
+		blocks.states.push_back(STATIC); // True mean static friction
 		blocks.timers.push_back(0);
 		blocks.start_positions.push_back(i);
 	}
@@ -201,6 +204,7 @@ double viscousForce(double eng, double v1, double v2)
         return eng*(v2-v1);
 }
 
+
 double frictionForce(params & blocks, int i, double x, double v)
 {
 	double friction = 0;
@@ -210,7 +214,7 @@ double frictionForce(params & blocks, int i, double x, double v)
 	if (blocks.states[i]) {
 		friction = -springForce(blocks.k_0, 0, blocks.start_positions[i], x);
 		if (abs(friction) > blocks.mu_s * blocks.f_N) {
-			blocks.states[i] = false;     // Change state
+			blocks.states[i] = DYNAMIC;     // Change state
 			blocks.timers[i] = blocks.t;  // Start timer
 		}
 	}
@@ -222,7 +226,7 @@ double frictionForce(params & blocks, int i, double x, double v)
 
 		// Check the timer
 		if (blocks.timers[i] > blocks.time_limit) {
-			blocks.states[i] = true;
+			blocks.states[i] = STATIC;
 			blocks.start_positions[i] = x;
 		}
 	}
