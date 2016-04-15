@@ -130,9 +130,12 @@ if __name__ == "__main__":
     try:
         filenameParameters = "output/parameters.txt"
         filenamePositions = "output/positions.bin"
+        filenameStates = "output/states.bin"
     except IOError:
         print("Could not read files")
         sys.exit(1)
     args = get_args()
     analyser = FrictionAnalyser(filenameParameters, filenamePositions)
     analyser.plot(args)
+    state_analyser = FrictionAnalyser(filenameParameters, filenameStates)
+    state_analyser.plot(args)
