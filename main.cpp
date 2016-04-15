@@ -26,11 +26,11 @@ struct params{
 	double f_N     ;
 	double time_limit; // Crap, misaligned
 	vector<double> start_positions; // Even worse!
-	vector<bool> states  ;
+	vector<double> states  ;
 	vector<double> timers;
 
 	
-	friend std::ostream& operator <<(std::ostream& os, params const& blocks)
+	friend ostream& operator <<(ostream& os, params const& blocks)
 		{
 			return os  << "vPusher " << blocks.vPusher << "\n"
 					   << "kPusher " << blocks.kPusher << "\n"
@@ -52,6 +52,7 @@ double springForce(double k, double d, double x1, double x2);
 double viscousForce(double eng, double v1, double v2);
 
 void writeArrayToFile(ofstream & outFile, double * array, int numBlocks);
+void writeVectorToFile(ofstream & outFile, vector<double> &vec, int numBlocks);
 
 double frictionForce(params & blocks, int i, double x, double v);
 template <typename T> int sgn(T val) {
@@ -86,6 +87,7 @@ int main() // This function runs when you execute the program.
 
 	// Create output streams
 	ofstream outFilePositions("output/positions.bin");
+        ofstream outFileStates("output/states.bin");
 	ofstream outFileParameters("output/parameters.txt");
 
 	// Allocate position array:
@@ -120,6 +122,7 @@ int main() // This function runs when you execute the program.
 		if ( (counter%writeFrequency) == 0)
 		{
 			writeArrayToFile(outFilePositions, positions, numBlocks);
+                        writeVectorToFile(outFileStates, blocks.states, numBlocks);
 		}
 		blocks.t += dt;
 		counter ++;
@@ -135,6 +138,7 @@ int main() // This function runs when you execute the program.
 	// Close output files
 	outFilePositions.close();
 	outFileParameters.close();
+        outFileStates.close();
 
 	cout << "Ran " << counter << " integration steps for "<<numBlocks<<" blocks in " << ((double)end - (double)start)/
 		CLOCKS_PER_SEC << " seconds" << endl;
@@ -221,6 +225,11 @@ double frictionForce(params & blocks, int i, double x, double v)
 	return friction;
 
 }
+void writeVectorToFile(ofstream & outFile, vector<double> &vec, int numBlocks)
+{
+	outFile.write(reinterpret_cast<char*>(&vec[0]), numBlocks*sizeof(char));
+}
+
 void writeArrayToFile(ofstream & outFile, double * array, int numBlocks)
 {
 	outFile.write(reinterpret_cast<char*>(array), numBlocks*sizeof(double));
