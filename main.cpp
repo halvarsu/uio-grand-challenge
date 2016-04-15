@@ -227,6 +227,7 @@ double frictionForce(params & blocks, int i, double x, double v)
 		// Check the timer
 		if (blocks.timers[i] > blocks.time_limit) {
 			blocks.states[i] = STATIC;
+			blocks.states[i] = true;
 			blocks.start_positions[i] = x;
 		}
 	}
