@@ -24,11 +24,13 @@ class FrictionAnalyser:
 
     def readData(self, data_file):
         self.data = np.fromfile(data_file)
-        nt = len(self.data) / self.nx
-        self.data.resize(nt, self.nx)
+        nx = int(self.nx)
+        nt = len(self.data) /nx
+        self.data.resize(nt, nx)
 
     def pcolorplot(self, args):
         Z = self.data - self.data[0]
+        print (Z.shape)
         colormap = mp.cm.get_cmap(args.colormap)
         if args.plot_gradient:
             # Compute the gradient
@@ -43,6 +45,12 @@ class FrictionAnalyser:
         plt.colorbar()
         plt.savefig("output/data.png")
         plt.show()
+
+    def animate(self,args):
+        from animate import Blocks
+        colormap = mp.cm.get_cmap(args.colormap)
+        blocks = Blocks(int(self.numBlocks), self.L, self.data[0::100],colormap)
+        blocks.animate(int(self.numBlocks))
 
     def colorplot3d(self, args):
         fig = plt.figure()
@@ -91,7 +99,9 @@ class FrictionAnalyser:
         plt.show()
 
     def plot(self, args):
-        if args.plot_3d:
+        if args.animate:
+            self.animate(args)
+        elif args.plot_3d:
             self.colorplot3d(args)
         else:
             self.pcolorplot(args)
@@ -111,6 +121,8 @@ def get_args():
                         help="Define rstride and cstride", type=int)
     parser.add_argument("-a", "--alpha", type=float, default=1,
                         help="Define the alpha level")
+    parser.add_argument("-ani","--animate", action="store_true",
+                        help="Animate the movement")
     return parser.parse_args()
 
 
