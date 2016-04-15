@@ -76,11 +76,12 @@ int main() // This function runs when you execute the program.
 	blocks.M				= 0.12;
 	blocks.m				= blocks.M/numBlocks;
 	blocks.eng              = sqrt(0.1)*sqrt(blocks.k*blocks.m);
-	blocks.time_limit       = 0.00001; // Unknown value
-	blocks.mu_s             = 1;  // Unknown value
-	blocks.mu_d             = 1;  // Unknown value
-	blocks.k_0              = 1;  // Unknown value
-	blocks.f_N              = 1;  // Unknown value
+	blocks.time_limit       = 0.002; // Unknown value
+	blocks.mu_s             = 0.4;  // Unknown value
+	blocks.mu_d             = 0.17;  // Unknown value
+	blocks.f_N              = 1920/numBlocks;  // Unknown value
+	blocks.k_0              = sqrt(39.2e9/blocks.f_N);  // Unknown value
+
 
 	int writeFrequency		= 10;
 
@@ -202,7 +203,7 @@ double frictionForce(params & blocks, int i, double x, double v)
 	// If the 'string' is attached, check if it is still to be attached
 	if (blocks.states[i]) {
 		friction = -springForce(blocks.k_0, 0, blocks.start_positions[i], x);
-		if (friction > -blocks.mu_s * blocks.f_N) {
+		if (abs(friction) > blocks.mu_s * blocks.f_N) {
 			blocks.states[i] = false;     // Change state
 			blocks.timers[i] = blocks.t;  // Start timer
 		}
@@ -216,6 +217,7 @@ double frictionForce(params & blocks, int i, double x, double v)
 		// Check the timer
 		if (blocks.timers[i] > blocks.time_limit) {
 			blocks.states[i] = true;
+			blocks.start_positions[i] = x;
 		}
 	}
 	return friction;
