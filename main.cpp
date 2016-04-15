@@ -152,10 +152,10 @@ void calculateForces(params & blocks, double * forces, double * positions, doubl
 
 	// First block
 	double pusherPosition = blocks.vPusher*blocks.t;
-	forces[0] += springForce(blocks.k, blocks.d, positions[0], positions[1]) +
-		springForce(blocks.kPusher, 0, positions[0], pusherPosition) +
-		viscousForce(blocks.eng, velocities[0], velocities[1]) +
-		frictionForce(blocks, 0, positions[0], velocities[0]);
+	forces[0] += springForce(blocks.k, blocks.d, positions[0], positions[1])
+		+ springForce(blocks.kPusher, 0, positions[0], pusherPosition)
+		+ viscousForce(blocks.eng, velocities[0], velocities[1])
+		+ frictionForce(blocks, 0, positions[0], velocities[0]);
         //- viscousForce(eng,velocities[0],velocities[1]);
 
 	// Middle blocks
@@ -170,8 +170,8 @@ void calculateForces(params & blocks, double * forces, double * positions, doubl
 
 	// Last block
 	forces[numBlocks-1] += springForce(blocks.k, -blocks.d, positions[numBlocks-1], positions[numBlocks-2])
-                             - viscousForce(blocks.eng, velocities[numBlocks-1], velocities[numBlocks-2])
-		+ frictionForce(blocks, numBlocks-1, positions[numBlocks-1], velocities[numBlocks-1]);
+		- viscousForce(blocks.eng, velocities[numBlocks-1], velocities[numBlocks-2])
+	    + frictionForce(blocks, numBlocks-1, positions[numBlocks-1], velocities[numBlocks-1]);
 }
 
 void integrate(double dt, double mass, double * forces, double * positions, double * velocities, int numBlocks)
@@ -201,8 +201,8 @@ double frictionForce(params & blocks, int i, double x, double v)
 
 	// If the 'string' is attached, check if it is still to be attached
 	if (blocks.states[i]) {
-		friction = springForce(blocks.k_0, 0, blocks.start_positions[i], x);
-		if (friction > blocks.mu_s * blocks.f_N) {
+		friction = -springForce(blocks.k_0, 0, blocks.start_positions[i], x);
+		if (friction > -blocks.mu_s * blocks.f_N) {
 			blocks.states[i] = false;     // Change state
 			blocks.timers[i] = blocks.t;  // Start timer
 		}
