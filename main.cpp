@@ -31,29 +31,14 @@ int main() // This function runs when you execute the program.
 	const double dt	   		= 1e-7;
 	const double tStop 		= 0.01;
 
-	Block blocks;
-	blocks.dt               = dt;
-	blocks.t                = 0;
-	blocks.vPusher			= 4e-4;
-	blocks.kPusher			= 4e6;
-	blocks.k				= 2.3e6; // Stiffness between blocks
-	blocks.L				= 0.14; // Physical length of block chain
-	blocks.d				= blocks.L/(numBlocks-1); // Distance between blocks in block chain
-	blocks.M				= 0.12;
-	blocks.m				= blocks.M/numBlocks;
-	blocks.eng              = sqrt(0.1)*sqrt(blocks.k*blocks.m);
-	blocks.time_limit       = 0.002; // Unknown value
-	blocks.mu_s             = 0.4;  // Unknown value
-	blocks.mu_d             = 0.17;  // Unknown value
-	blocks.f_N              = 1920/numBlocks;  // Unknown value
-	blocks.k_0              = sqrt(39.2e9/blocks.f_N);  // Unknown value
-
+	// The constructor takes care of the parameters
+	Block blocks(numBlocks, dt);
 
 	int writeFrequency		= 10;
 
 	// Create output streams
 	ofstream outFilePositions("output/positions.bin");
-        ofstream outFileStates("output/states.bin");
+	ofstream outFileStates("output/states.bin");
 	ofstream outFileParameters("output/parameters.txt");
 
 	// Allocate position array:
@@ -139,7 +124,7 @@ void calculateForces(Block & blocks, double * forces, double * positions, double
 	}
 
 	// Last block
-	forces[numBlocks-1] += blocks.springForce(blocks.k, -blocks.d, qpositions[numBlocks-1],
+	forces[numBlocks-1] += blocks.springForce(blocks.k, -blocks.d, positions[numBlocks-1],
 	positions[numBlocks-2])
 		- blocks.viscousForce(velocities[numBlocks-1], velocities[numBlocks-2])
 	    + blocks.frictionForce(numBlocks-1, positions[numBlocks-1], velocities[numBlocks-1]);

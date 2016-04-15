@@ -1,5 +1,25 @@
 #include "headers/Block.h"
 
+Block::Block(int numBlocks, double dt)
+{
+	dt               = dt;
+	t                = 0;
+	vPusher			= 4e-4;
+	kPusher			= 4e6;
+	k				= 2.3e6; // Stiffness between blocks
+	L				= 0.14; // Physical length of block chain
+	d				= L/(numBlocks-1); // Distance between blocks in block chain
+	M				= 0.12;
+	m				= M/numBlocks;
+	eng              = sqrt(0.1)*sqrt(k*m);
+	time_limit       = 0.002; // Unknown value
+	mu_s             = 0.4;  // Unknown value
+	mu_d             = 0.17;  // Unknown value
+	f_N              = 1920/numBlocks;  // Unknown value
+	k_0              = sqrt(39.2e9/f_N);  // Unknown value
+
+}
+
 double Block::springForce(double K, double D, double x1, double x2)
 {
 	return K*(x2-x1-D);

@@ -44,7 +44,8 @@ public:
 					   << "m " << blocks.m << "\n"
 					   << "eng " << blocks.eng << "\n";
 		}
-
+	Block(int numBlocks, double dt);
+	
 	double springForce(double K, double D, double x1, double x2);
 
 	double viscousForce(double v1, double v2);
