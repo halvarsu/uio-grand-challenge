@@ -87,6 +87,7 @@ int main() // This function runs when you execute the program.
 	end = clock();
 
 		// Output parameters to file
+        outFileParameters << "numBlocks " << numBlocks << "\n";
 	outFileParameters << "nx " << numBlocks << "\n";
 	outFileParameters << "dt " << dt << "\n";
 	outFileParameters << "tStop " << tStop << "\n";
