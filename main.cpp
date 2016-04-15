@@ -25,9 +25,21 @@ struct params{
 	double k_0     ;
 	double f_N     ;
 	double time_limit; // Crap, misaligned
-	vector<bool> start_positions; // Even worse!
-	vector<double> states  ;
+	vector<double> start_positions; // Even worse!
+	vector<bool> states  ;
 	vector<double> timers;
+
+	
+	friend std::ostream& operator <<(std::ostream& os, params const& blocks)
+		{
+			return os  << "vPusher " << blocks.vPusher << "\n"
+					   << "kPusher " << blocks.kPusher << "\n"
+					   << "k " << blocks.k << "\n"
+					   << "L " << blocks.L << "\n"
+					   << "M " << blocks.M << "\n"
+					   << "m " << blocks.m << "\n"
+					   << "eng " << blocks.eng << "\n";
+		}
 };
 
 // Forward declare functions
@@ -48,10 +60,8 @@ template <typename T> int sgn(T val) {
 
 int main() // This function runs when you execute the program.
 {
-	clock_t start, end;
-	start = clock();
 	// Choose parameters
-	
+
 	const int numBlocks		= 70;
 	const double dt	   		= 1e-7;
 	const double tStop 		= 0.01;
@@ -91,10 +101,13 @@ int main() // This function runs when you execute the program.
 		positions[i] = blocks.d*i;
 		velocities[i] = 0;
 		forces[i] = 0;
-		blocks.states.push_back(true);
+		blocks.states.push_back(true); // True mean static friction
 		blocks.timers.push_back(0);
 		blocks.start_positions.push_back(i);
 	}
+
+	clock_t start, end;
+	start = clock();
 
 	int counter = 0;
 	while (blocks.t<tStop)
@@ -113,17 +126,11 @@ int main() // This function runs when you execute the program.
 	}
 	end = clock();
 
-		// Output parameters to file
+	// Output parameters to file
 	outFileParameters << "nx " << numBlocks << "\n";
 	outFileParameters << "dt " << dt << "\n";
 	outFileParameters << "tStop " << tStop << "\n";
-	outFileParameters << "vPusher " << blocks.vPusher << "\n";
-	outFileParameters << "kPusher " << blocks.kPusher << "\n";
-	outFileParameters << "k " << blocks.k << "\n";
-	outFileParameters << "L " << blocks.L << "\n";
-	outFileParameters << "M " << blocks.M << "\n";
-	outFileParameters << "m " << blocks.m << "\n";
-	outFileParameters << "eng " << blocks.eng << "\n";
+	outFileParameters << blocks;
 
 	// Close output files
 	outFilePositions.close();
@@ -190,8 +197,8 @@ double viscousForce(double eng, double v1, double v2)
 double frictionForce(params & blocks, int i, double x, double v)
 {
 	double friction = 0;
-	return friction; // Remove me to activate friction
-	
+	//return friction; // Remove me to activate friction
+
 	// If the 'string' is attached, check if it is still to be attached
 	if (blocks.states[i]) {
 		friction = springForce(blocks.k_0, 0, blocks.start_positions[i], x);
@@ -207,7 +214,7 @@ double frictionForce(params & blocks, int i, double x, double v)
 		blocks.timers[i]++;
 
 		// Check the timer
-		if (blocks.timers[i] < blocks.time_limit) {
+		if (blocks.timers[i] > blocks.time_limit) {
 			blocks.states[i] = true;
 		}
 	}
