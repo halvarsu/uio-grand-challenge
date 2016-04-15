@@ -11,6 +11,7 @@
 using namespace std;
 
 struct params{
+	double dt      ;
 	double vPusher ;    
 	double kPusher ;    
 	double k       ;    
@@ -68,8 +69,9 @@ int main() // This function runs when you execute the program.
 	const double tStop 		= 0.01;
 
 	params blocks;
+	blocks.dt               = dt;
 	blocks.t                = 0;
-	blocks.vPusher			= 4e-4;
+	blocks.vPusher			= 10*4e-4;
 	blocks.kPusher			= 4e6;
 	blocks.k				= 2.3e6; // Stiffness between blocks
 	blocks.L				= 0.14; // Physical length of block chain
@@ -216,7 +218,7 @@ double frictionForce(params & blocks, int i, double x, double v)
 	// If the string is subsequently not attached
 	if (!blocks.states[i]) {
 		friction = -blocks.mu_d * blocks.f_N * sgn(v);
-		blocks.timers[i]++;
+		blocks.timers[i] += blocks.dt;
 
 		// Check the timer
 		if (blocks.timers[i] > blocks.time_limit) {
