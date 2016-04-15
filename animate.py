@@ -15,6 +15,9 @@ class Blocks():
         self.animation  = FuncAnimation(self.fig, self.update,data.shape[0], 
                             fargs=(self.data, self.scatter), interval =15)
 
+    def get_colorrange(self):
+        self.crange = np.linspace(self.c[0,0],self.c[-1,0],self.c.T[0].size)
+
     def update(self,num,data, scat):
         array           = np.array((data[num],np.zeros_like(data[num]))).T
         
