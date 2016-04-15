@@ -32,6 +32,7 @@ struct params{
 	vector<double> start_positions; // Even worse!
 	vector<double> states  ;
 	vector<double> timers;
+	vector<double> spring;
 
 	
 	friend ostream& operator <<(ostream& os, params const& blocks)
@@ -111,7 +112,8 @@ int main() // This function runs when you execute the program.
 		forces[i] = 0;
 		blocks.states.push_back(STATIC); // True mean static friction
 		blocks.timers.push_back(0);
-		blocks.start_positions.push_back(i);
+		blocks.spring.push_back(0);
+		blocks.start_positions.push_back(blocks.d*i);
 	}
 
 	clock_t start, end;
@@ -128,7 +130,7 @@ int main() // This function runs when you execute the program.
 		if ( (counter%writeFrequency) == 0)
 		{
 			writeArrayToFile(outFilePositions, positions, numBlocks);
-                        writeVectorToFile(outFileStates, blocks.states, numBlocks);
+                        writeVectorToFile(outFileStates, blocks.spring, numBlocks);
 		}
 		blocks.t += dt;
 		counter ++;
@@ -209,7 +211,6 @@ double frictionForce(params & blocks, int i, double x, double v)
 {
 	double friction = 0;
 	//return friction; // Remove me to activate friction
-
 	// If the 'string' is attached, check if it is still to be attached
 	if (blocks.states[i]) {
 		friction = -springForce(blocks.k_0, 0, blocks.start_positions[i], x);
@@ -218,7 +219,7 @@ double frictionForce(params & blocks, int i, double x, double v)
 			blocks.timers[i] = blocks.t;  // Start timer
 		}
 	}
-
+   
 	// If the string is subsequently not attached
 	if (!blocks.states[i]) {
 		friction = -blocks.mu_d * blocks.f_N * sgn(v);
