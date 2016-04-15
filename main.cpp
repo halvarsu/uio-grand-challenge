@@ -229,7 +229,7 @@ double frictionForce(params & blocks, int i, double x, double v)
 }
 void writeVectorToFile(ofstream & outFile, vector<double> &vec, int numBlocks)
 {
-	outFile.write(reinterpret_cast<char*>(&vec[0]), numBlocks*sizeof(char));
+	outFile.write(reinterpret_cast<char*>(&vec[0]), numBlocks*sizeof(double));
 }
 
 void writeArrayToFile(ofstream & outFile, double * array, int numBlocks)
