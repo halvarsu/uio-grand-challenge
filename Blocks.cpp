@@ -1,8 +1,7 @@
 #include "headers/Block.h"
 
-Block::Block(int numBlocks, double dt)
+Block::Block(int N): numBlocks(N)
 {
-	dt               = dt;
 	t                = 0;
 	vPusher			= 4e-4;
 	kPusher			= 4e6;
@@ -18,6 +17,33 @@ Block::Block(int numBlocks, double dt)
 	f_N              = 1920/numBlocks;  // Unknown value
 	k_0              = sqrt(39.2e9/f_N);  // Unknown value
 
+	start_positions  = new double[N];
+	timers           = new double[N];
+	positions        = new double[N];
+	velocities       = new double[N];
+	forces           = new double[N];
+	states           = new double[N];
+
+	// Initialize the containers
+	for (int i = 0; i < numBlocks; i++) {
+		start_positions[i] = d*i;			
+		positions[i] = d*i;
+		velocities[i] = 0;
+		forces[i] = 0;
+		states[i] = STATIC;
+		timers[i] = 0;
+	}
+
+}
+
+Block::~Block()
+{
+	delete [] timers;
+	delete [] start_positions;
+	delete [] positions;
+	delete [] velocities;
+	delete [] forces;
+	delete [] states;
 }
 
 double Block::springForce(double K, double D, double x1, double x2)
@@ -31,7 +57,7 @@ double Block::viscousForce(double v1, double v2)
 }
 
 
-double Block::frictionForce(int i, double x, double v)
+double Block::frictionForce(int i, double x, double v, double dt)
 {
 	double friction = 0;
 
@@ -58,4 +84,44 @@ double Block::frictionForce(int i, double x, double v)
 	return friction;
 
 }
-// I'm all alone in here! :(
+
+void Block::calculateForces(double dt)
+{
+	// Reset forces
+	for (int i = 0; i<numBlocks; i++)
+	{
+		forces[i] = 0;
+	}
+
+	// First block
+	double pusherPosition = vPusher*t;
+	forces[0] += springForce(k, d, positions[0], positions[1])
+		+ springForce(kPusher, 0, positions[0], pusherPosition)
+		+ viscousForce(velocities[0], velocities[1])
+		+ frictionForce(0, positions[0], velocities[0], dt);
+
+	// Middle blocks
+	for (int i = 1; i<numBlocks-1; i++)
+	{
+		forces[i] += springForce(k, d, positions[i], positions[i+1])
+			-springForce(k, d, positions[i-1], positions[i])
+			+viscousForce(velocities[i], velocities[i+1])
+			-viscousForce(velocities[i-1],velocities[i])
+		    +frictionForce(i, positions[i], velocities[i], dt);
+	}
+
+	// Last block
+	forces[numBlocks-1] += springForce(k, -d, positions[numBlocks-1], positions[numBlocks-2])
+		- viscousForce(velocities[numBlocks-1], velocities[numBlocks-2])
+	    + frictionForce(numBlocks-1, positions[numBlocks-1], velocities[numBlocks-1], dt);
+}
+
+void Block::integrate(double dt)
+{
+	// Euler-Cromer
+	for (int i = 0; i<numBlocks; i++)
+	{
+		velocities[i] += forces[i]/m*dt;
+		positions[i] += velocities[i]*dt;
+	}
+}

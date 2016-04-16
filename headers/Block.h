@@ -4,7 +4,6 @@
 #define STATIC 1.0
 #define DYNAMIC 0.0
 
-#include <vector>
 #include <iostream>
 #include <cmath>
 
@@ -14,7 +13,7 @@ template <typename T> int sgn(T val) {
 
 class Block{
 public:
-	double dt      ;
+	const int numBlocks;
 	double vPusher ;    
 	double kPusher ;    
 	double k       ;    
@@ -29,10 +28,12 @@ public:
 	double k_0     ;
 	double f_N     ;
 	double time_limit; // Crap, misaligned
-	std::vector<double> start_positions; // Even worse!
-	std::vector<double> states  ;
-	std::vector<double> timers;
-
+	double* start_positions; // Even worse!
+	double* states  ;
+	double* timers;
+	double* positions;
+	double* velocities;
+	double* forces;
 	
 	friend std::ostream& operator <<(std::ostream& os, Block const& blocks)
 		{
@@ -44,13 +45,19 @@ public:
 					   << "m " << blocks.m << "\n"
 					   << "eng " << blocks.eng << "\n";
 		}
-	Block(int numBlocks, double dt);
-	
+	Block(int numBlocks);
+
+	~Block();
+
 	double springForce(double K, double D, double x1, double x2);
 
 	double viscousForce(double v1, double v2);
 
-	double frictionForce(int i, double x, double v);
+	double frictionForce(int i, double x, double v, double dt);
+
+	void calculateForces(double dt);
+
+	void integrate(double dt);
 };
 
 

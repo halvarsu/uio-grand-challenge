@@ -14,10 +14,7 @@ using namespace std;
 
 
 // Forward declare functions
-void calculateForces(Block & blocks, double * forces, double * positions, double * velocities, int numBlocks);
-
-void integrate(double dt, double m, double * forces, double * positions, double * velocities, int numBlocks);
-
+void integrate(double dt, Block & blocks);
 void writeArrayToFile(ofstream & outFile, double * array, int numBlocks);
 void writeVectorToFile(ofstream & outFile, vector<double> &vec, int numBlocks);
 
@@ -32,7 +29,7 @@ int main() // This function runs when you execute the program.
 	const double tStop 		= 0.01;
 
 	// The constructor takes care of the parameters
-	Block blocks(numBlocks, dt);
+	Block blocks(numBlocks);
 
 	int writeFrequency		= 10;
 
@@ -41,24 +38,6 @@ int main() // This function runs when you execute the program.
 	ofstream outFileStates("output/states.bin");
 	ofstream outFileParameters("output/parameters.txt");
 
-	// Allocate position array:
-	double positions[numBlocks];
-	// Allocate velocity array:
-	double velocities[numBlocks];
-	// Allocate force array:
-	double forces[numBlocks];
-
-	// Initialize arrays
-	for (int i = 0; i<numBlocks; i++)
-	{
-		positions[i] = blocks.d*i;
-		velocities[i] = 0;
-		forces[i] = 0;
-		blocks.states.push_back(STATIC); // True mean static friction
-		blocks.timers.push_back(0);
-		blocks.start_positions.push_back(blocks.d*i);
-	}
-
 	clock_t start, end;
 	start = clock();
 
@@ -66,14 +45,14 @@ int main() // This function runs when you execute the program.
 	while (blocks.t<tStop)
 	{
 		// Calculate forces
-		calculateForces(blocks, forces, positions, velocities, numBlocks);
-		integrate(dt, blocks.m, forces, positions, velocities, numBlocks);
+		blocks.calculateForces(dt);
+		blocks.integrate(dt);
 
 		// modulo operation to check whether to write output to file on this timestep
 		if ( (counter%writeFrequency) == 0)
 		{
-			writeArrayToFile(outFilePositions, positions, numBlocks);
-                        writeVectorToFile(outFileStates, blocks.states, numBlocks);
+			writeArrayToFile(outFilePositions, blocks.positions, blocks.numBlocks);
+            writeArrayToFile(outFileStates, blocks.states, blocks.numBlocks);
 		}
 		blocks.t += dt;
 		counter ++;
@@ -97,48 +76,6 @@ int main() // This function runs when you execute the program.
 
 }
 
-void calculateForces(Block & blocks, double * forces, double * positions, double * velocities, int numBlocks)
- {
-	// Reset forces
-	for (int i = 0; i<numBlocks; i++)
-	{
-		forces[i] = 0;
-	}
-
-	// First block
-	double pusherPosition = blocks.vPusher*blocks.t;
-	forces[0] += blocks.springForce(blocks.k, blocks.d, positions[0], positions[1])
-		+ blocks.springForce(blocks.kPusher, 0, positions[0], pusherPosition)
-		+ blocks.viscousForce(velocities[0], velocities[1])
-		+ blocks.frictionForce(0, positions[0], velocities[0]);
-        //- viscousForce(eng,velocities[0],velocities[1]);
-
-	// Middle blocks
-	for (int i = 1; i<numBlocks-1; i++)
-	{
-		forces[i] += blocks.springForce(blocks.k, blocks.d, positions[i], positions[i+1])
-			-blocks.springForce(blocks.k, blocks.d, positions[i-1], positions[i])
-			+blocks.viscousForce(velocities[i], velocities[i+1])
-			-blocks.viscousForce(velocities[i-1],velocities[i]);
-		forces[i] += blocks.frictionForce(i, positions[i], velocities[i]);
-	}
-
-	// Last block
-	forces[numBlocks-1] += blocks.springForce(blocks.k, -blocks.d, positions[numBlocks-1],
-	positions[numBlocks-2])
-		- blocks.viscousForce(velocities[numBlocks-1], velocities[numBlocks-2])
-	    + blocks.frictionForce(numBlocks-1, positions[numBlocks-1], velocities[numBlocks-1]);
-}
-
-void integrate(double dt, double mass, double * forces, double * positions, double * velocities, int numBlocks)
-{
-	// Euler-Cromer
-	for (int i = 0; i<numBlocks; i++)
-	{
-		velocities[i] += forces[i]/mass*dt;
-		positions[i] += velocities[i]*dt;
-	}
-}
 
 void writeVectorToFile(ofstream & outFile, vector<double> &vec, int numBlocks)
 {
