@@ -32,6 +32,7 @@ private:
 	double* m_positions;
 	double* m_velocities;
 	double* m_forces;
+	double* m_connectorForces;
 public:
 	const int m_numBlocks;
 	double m_t       ;
@@ -49,7 +50,17 @@ public:
 	Block(int numBlocks);
 
 	~Block();
+    // Trivial functions
 
+	double* getPositions(){return m_positions;}
+
+	double* getStates(){return m_states;}
+
+	double* getForces(){return m_forces;}
+
+	double* getConnectorForces(){return m_connectorForces;}
+
+	// Non-trivial functions
 	double springForce(double K, double D, double x1, double x2);
 
 	double viscousForce(double v1, double v2);
@@ -59,10 +70,6 @@ public:
 	void calculateForces(double dt);
 
 	void integrate(double dt);
-
-	double* getPositions();
-
-	double* getStates();
 };
 
 

@@ -30,12 +30,15 @@ int main() // This function runs when you execute the program.
 	// The constructor takes care of the parameters
 	Block blocks(numBlocks);
 
-	int writeFrequency		= 10;
+	int writeFrequency		= (int) (1000 * tStop);
+	cout << "The write frequency is " << writeFrequency << endl;
 
 	// Create output streams
 	ofstream outFilePositions("output/positions.bin");
 	ofstream outFileStates("output/states.bin");
 	ofstream outFileParameters("output/parameters.txt");
+	ofstream outFileForces("output/forces.bin");
+	ofstream outFileConnectorForces("output/connectorForces.bin");
 
 	clock_t start, end;
 	start = clock();
@@ -52,6 +55,8 @@ int main() // This function runs when you execute the program.
 		{
 			writeArrayToFile(outFilePositions, blocks.getPositions(), blocks.m_numBlocks);
             writeArrayToFile(outFileStates, blocks.getStates(), blocks.m_numBlocks);
+			writeArrayToFile(outFileForces, blocks.getForces(), blocks.m_numBlocks);
+			writeArrayToFile(outFileConnectorForces, blocks.getConnectorForces(), blocks.m_numBlocks);
 		}
 		blocks.m_t += dt;
 		counter ++;
@@ -67,7 +72,9 @@ int main() // This function runs when you execute the program.
 	// Close output files
 	outFilePositions.close();
 	outFileParameters.close();
-        outFileStates.close();
+	outFileStates.close();
+	outFileForces.close();
+	outFileConnectorForces.close();
 
 	cout << "Ran " << counter << " integration steps for "<<numBlocks<<" blocks in " << ((double)end - (double)start)/
 		CLOCKS_PER_SEC << " seconds" << endl;

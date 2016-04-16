@@ -10,27 +10,32 @@ import argparse
 
 class FrictionAnalyser:
 
-    def __init__(self, parameterFileName, dataFileName):
-        self.parameterFileName = parameterFileName
+    def __init__(self, filenameParameters, filenamePositions,
+                 filenameStates, filenameForces, filenameConnectorForces):
+        self.parameterFileName = filenameParameters
         self.readParameters()
-        self.readData(dataFileName)
+        self.positions = self.readData(filenamePositions)
+        self.states = self.readData(filenameStates)
+        self.forces = self.readData(filenameForces)
+        self.connectorForces = self.readData(filenameConnectorForces)
 
     def readParameters(self):
         ifile = open(self.parameterFileName, "r")
         fileContents = ifile.readlines()
         for line in fileContents:
             words = line.split()
-            exec("self.%s=%f" %(words[0],float(words[1])))
+            exec("self.%s=%f" % (words[0], float(words[1])))
 
     def readData(self, data_file):
-        self.data = np.fromfile(data_file)
+        data = np.fromfile(data_file)
         nx = int(self.nx)
-        nt = len(self.data) /nx
-        self.data.resize(nt, nx)
+        nt = len(data) // nx
+        data.resize(nt, nx)
+        return data
 
-    def pcolorplot(self, args):
-        Z = self.data - self.data[0]
-        print (Z.shape)
+    def pcolorplot(self, args, data):
+        Z = data - data[0]
+        print(Z.shape)
         colormap = mp.cm.get_cmap(args.colormap)
         if args.plot_gradient:
             # Compute the gradient
@@ -46,22 +51,22 @@ class FrictionAnalyser:
         plt.savefig("output/data.png")
         plt.show()
 
-    def animate(self,args):
-        #Animates using 50 data points
+    def animate(self, args, data):
+        # Animates using 50 data points
         from animate import Blocks
         colormap = mp.cm.get_cmap(args.colormap)
 
-        point_count= 50
-        data_slice = int(self.data.shape[0]/point_count)
-        
-        blocks = Blocks(int(self.nx), self.L, self.data[0::data_slice],point_count,
-                        colormap)
+        point_count = 50
+        data_slice = int(data.shape[0]/point_count)
+
+        blocks = Blocks(int(self.nx), self.L, data[0::data_slice],
+                        point_count, colormap)
         blocks.animate(int(self.nx), save=True)
 
-    def colorplot3d(self, args):
+    def colorplot3d(self, args, data):
         fig = plt.figure()
         ax = fig.gca(projection='3d')
-        shape = self.data.shape
+        shape = data.shape
 
         # Settings for quick tweaking
         colormap = mp.cm.get_cmap(args.colormap)
@@ -72,7 +77,7 @@ class FrictionAnalyser:
         x = np.linspace(0, shape[1], shape[1])
         y = np.linspace(0, shape[0], shape[0])
         X, Y = np.meshgrid(x, y)
-        Z = self.data - self.data[0]
+        Z = data - data[0]
 
         if args.plot_gradient:
             # Compute the gradient
@@ -104,13 +109,53 @@ class FrictionAnalyser:
         plt.savefig("output/data.png")
         plt.show()
 
-    def plot(self, args):
-        if args.animate:
-            self.animate(args)
+    def plot(self, args, data):
+        if args.full_plot:
+            self.plot_full(args)
+        elif args.animate:
+            self.animate(args, data)
         elif args.plot_3d:
-            self.colorplot3d(args)
+            self.colorplot3d(args, data)
         else:
-            self.pcolorplot(args)
+            self.pcolorplot(args, data)
+
+    def plot_full(self, args):
+        colormap = mp.cm.get_cmap(args.colormap)
+
+        # The driving force
+        forces = self.forces - self.forces[0]
+        driving_force = forces[:, 0]
+        plt.subplot(221)
+        plt.plot(range(len(driving_force)), driving_force)
+        plt.xlabel('t'); plt.ylabel('F(t)')
+        plt.title("Driving force")
+
+        # The force between the connectors and the surface
+        plt.subplot(222)
+        plt.pcolormesh(self.connectorForces, cmap=colormap)
+        plt.xlabel('Block index'); plt.ylabel('Time step')
+        plt.colorbar()
+        plt.title("Connector forces")
+
+        # The state of the connectors
+        plt.subplot(223)
+        plt.pcolormesh(self.states, cmap='Greys')
+        plt.xlabel('Block index')
+        plt.ylabel('Time step')
+        plt.colorbar()
+        plt.title("States of the connectors")
+
+        # Plot the positions
+        plt.subplot(224)
+        positions = self.positions - self.positions[0]
+        plt.pcolormesh(positions, cmap=colormap)
+        plt.xlabel('Block index')
+        plt.ylabel('Time step')
+        plt.colorbar()
+        plt.title("Positions")
+
+        plt.tight_layout()
+        plt.show()
 
 
 def get_args():
@@ -127,19 +172,32 @@ def get_args():
                         help="Define rstride and cstride", type=int)
     parser.add_argument("-a", "--alpha", type=float, default=1,
                         help="Define the alpha level")
-    parser.add_argument("-ani","--animate", action="store_true",
+    parser.add_argument("-ani", "--animate", action="store_true",
                         help="Animate the movement")
+    parser.add_argument("-f", "--plot_forces", action="store_true",
+                        help="Plot the forces")
+    parser.add_argument("--plot_state", action="store_true",
+                        help="Plots the state of each connector")
+    parser.add_argument("-F", "--full_plot", action="store_true",
+                        help="Plots driving force, connector forces, states and")
     return parser.parse_args()
 
 
 if __name__ == "__main__":
-    try:
-        filenameParameters = "output/parameters.txt"
-        filenamePositions = "output/positions.bin"
-        filenameStates = "output/states.bin"
-    except IOError:
-        print("Could not read files")
-        sys.exit(1)
+    filenameParameters = "output/parameters.txt"
+    filenamePositions = "output/positions.bin"
+    filenameStates = "output/states.bin"
+    filenameForces = "output/forces.bin"
+    filenameConnectorForces = "output/connectorForces.bin"
+    
     args = get_args()
-    analyser = FrictionAnalyser(filenameParameters, filenamePositions)
-    analyser.plot(args)
+    analyser = FrictionAnalyser(filenameParameters, filenamePositions,
+                                filenameStates, filenameForces, filenameConnectorForces)
+    if args.plot_forces:
+        data = analyser.forces
+    elif args.plot_state:
+        data = analyser.states
+    else:
+        data = analyser.positions
+
+    analyser.plot(args, data)
