@@ -14,7 +14,6 @@ using namespace std;
 
 
 // Forward declare functions
-void integrate(double dt, Block & blocks);
 void writeArrayToFile(ofstream & outFile, double * array, int numBlocks);
 void writeVectorToFile(ofstream & outFile, vector<double> &vec, int numBlocks);
 
@@ -42,7 +41,7 @@ int main() // This function runs when you execute the program.
 	start = clock();
 
 	int counter = 0;
-	while (blocks.t<tStop)
+	while (blocks.m_t<tStop)
 	{
 		// Calculate forces
 		blocks.calculateForces(dt);
@@ -51,10 +50,10 @@ int main() // This function runs when you execute the program.
 		// modulo operation to check whether to write output to file on this timestep
 		if ( (counter%writeFrequency) == 0)
 		{
-			writeArrayToFile(outFilePositions, blocks.positions, blocks.numBlocks);
-            writeArrayToFile(outFileStates, blocks.states, blocks.numBlocks);
+			writeArrayToFile(outFilePositions, blocks.getPositions(), blocks.m_numBlocks);
+            writeArrayToFile(outFileStates, blocks.getStates(), blocks.m_numBlocks);
 		}
-		blocks.t += dt;
+		blocks.m_t += dt;
 		counter ++;
 	}
 	end = clock();

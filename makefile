@@ -6,5 +6,8 @@ main:
 
 blocks:
 	g++ -g Blocks.cpp -o Blocks.o
+
+fast:
+	g++ -Ofast -march=native -flto -fwhole-program main.cpp Blocks.cpp -o main
 clean:
 	rm *o main

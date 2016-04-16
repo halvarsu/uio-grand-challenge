@@ -12,38 +12,39 @@ template <typename T> int sgn(T val) {
 }
 
 class Block{
+private:
+	double m_vPusher ;    
+	double m_kPusher ;    
+	double m_k       ;    
+	double m_L       ;    
+	double m_d       ;    
+	double m_M       ;    
+	double m_m       ;
+	double m_eng     ;
+	double m_mu_s    ;
+	double m_mu_d    ;
+	double m_k_0     ;
+	double m_f_N     ;
+	double m_time_limit; // Crap, misaligned
+	double* m_start_positions; // Even worse!
+	double* m_states  ;
+	double* m_timers;
+	double* m_positions;
+	double* m_velocities;
+	double* m_forces;
 public:
-	const int numBlocks;
-	double vPusher ;    
-	double kPusher ;    
-	double k       ;    
-	double L       ;    
-	double d       ;    
-	double M       ;    
-	double m       ;
-	double eng     ;
-	double t       ;
-	double mu_s    ;
-	double mu_d    ;
-	double k_0     ;
-	double f_N     ;
-	double time_limit; // Crap, misaligned
-	double* start_positions; // Even worse!
-	double* states  ;
-	double* timers;
-	double* positions;
-	double* velocities;
-	double* forces;
+	const int m_numBlocks;
+	double m_t       ;
 	
 	friend std::ostream& operator <<(std::ostream& os, Block const& blocks)
 		{
-			return os  << "vPusher " << blocks.vPusher << "\n"
-					   << "kPusher " << blocks.kPusher << "\n"
-					   << "k " << blocks.k << "\n"
-					   << "L " << blocks.L << "\n"
-					   << "M " << blocks.M << "\n"
-					   << "m " << blocks.m << "\n"
-					   << "eng " << blocks.eng << "\n";
+			return os  << "vPusher " << blocks.m_vPusher << "\n"
+					   << "kPusher " << blocks.m_kPusher << "\n"
+					   << "k " << blocks.m_k << "\n"
+					   << "L " << blocks.m_L << "\n"
+					   << "M " << blocks.m_M << "\n"
+					   << "m " << blocks.m_m << "\n"
+					   << "eng " << blocks.m_eng << "\n";
 		}
 	Block(int numBlocks);
 
@@ -58,6 +59,10 @@ public:
 	void calculateForces(double dt);
 
 	void integrate(double dt);
+
+	double* getPositions();
+
+	double* getStates();
 };
 
 

@@ -1,49 +1,49 @@
 #include "headers/Block.h"
 
-Block::Block(int N): numBlocks(N)
+Block::Block(int N): m_numBlocks(N)
 {
-	t                = 0;
-	vPusher			= 4e-4;
-	kPusher			= 4e6;
-	k				= 2.3e6; // Stiffness between blocks
-	L				= 0.14; // Physical length of block chain
-	d				= L/(numBlocks-1); // Distance between blocks in block chain
-	M				= 0.12;
-	m				= M/numBlocks;
-	eng              = sqrt(0.1)*sqrt(k*m);
-	time_limit       = 0.002; // Unknown value
-	mu_s             = 0.4;  // Unknown value
-	mu_d             = 0.17;  // Unknown value
-	f_N              = 1920/numBlocks;  // Unknown value
-	k_0              = sqrt(39.2e9/f_N);  // Unknown value
+	m_t                = 0;
+	m_vPusher			= 4e-4;
+	m_kPusher			= 4e6;
+	m_k				= 2.3e6; // Stiffness between blocks
+	m_L				= 0.14; // Physical length of block chain
+	m_d				= m_L/(N-1); // Distance between blocks in block chain
+	m_M				= 0.12;
+	m_m				= m_M/N;
+	m_eng              = sqrt(0.1)*sqrt(m_k*m_m);
+	m_time_limit       = 0.002; // Unknown value
+	m_mu_s             = 0.4;  // Unknown value
+	m_mu_d             = 0.17;  // Unknown value
+	m_f_N              = 1920/N;  // Unknown value
+	m_k_0              = sqrt(39.2e9/m_f_N);  // Unknown value
 
-	start_positions  = new double[N];
-	timers           = new double[N];
-	positions        = new double[N];
-	velocities       = new double[N];
-	forces           = new double[N];
-	states           = new double[N];
+	m_start_positions  = new double[N];
+	m_timers           = new double[N];
+	m_positions        = new double[N];
+	m_velocities       = new double[N];
+	m_forces           = new double[N];
+	m_states           = new double[N];
 
 	// Initialize the containers
-	for (int i = 0; i < numBlocks; i++) {
-		start_positions[i] = d*i;			
-		positions[i] = d*i;
-		velocities[i] = 0;
-		forces[i] = 0;
-		states[i] = STATIC;
-		timers[i] = 0;
+	for (int i = 0; i < m_numBlocks; i++) {
+		m_start_positions[i] = m_d*i;			
+		m_positions[i] = m_d*i;
+		m_velocities[i] = 0;
+		m_forces[i] = 0;
+		m_states[i] = STATIC;
+		m_timers[i] = 0;
 	}
 
 }
 
 Block::~Block()
 {
-	delete [] timers;
-	delete [] start_positions;
-	delete [] positions;
-	delete [] velocities;
-	delete [] forces;
-	delete [] states;
+	delete [] m_timers;
+	delete [] m_start_positions;
+	delete [] m_positions;
+	delete [] m_velocities;
+	delete [] m_forces;
+	delete [] m_states;
 }
 
 double Block::springForce(double K, double D, double x1, double x2)
@@ -53,7 +53,7 @@ double Block::springForce(double K, double D, double x1, double x2)
 
 double Block::viscousForce(double v1, double v2)
 {
-	return eng*(v2-v1);
+	return m_eng*(v2-v1);
 }
 
 
@@ -61,24 +61,24 @@ double Block::frictionForce(int i, double x, double v, double dt)
 {
 	double friction = 0;
 
-	if (states[i]) {
-		friction = -springForce(k_0, 0, start_positions[i], x);
-		if (std::abs(friction) > mu_s * f_N) {
-			states[i] = DYNAMIC;     // Change state
-			timers[i] = t;  // Start timer
+	if (m_states[i]) {
+		friction = -springForce(m_k_0, 0, m_start_positions[i], x);
+		if (std::abs(friction) > m_mu_s * m_f_N) {
+			m_states[i] = DYNAMIC;     // Change state
+			m_timers[i] = m_t;  // Start timer
 		}
 	}
    
 	// If the string is subsequently not attached
-	if (!states[i]) {
-		friction = -mu_d * f_N * sgn(v);
-		timers[i] += dt;
+	if (!m_states[i]) {
+		friction = -m_mu_d * m_f_N * sgn(v);
+		m_timers[i] += dt;
 
 		// Check the timer
-		if (timers[i] > time_limit) {
-			states[i] = STATIC;
-			states[i] = true;
-			start_positions[i] = x;
+		if (m_timers[i] > m_time_limit) {
+			m_states[i] = STATIC;
+			m_states[i] = true;
+			m_start_positions[i] = x;
 		}
 	}
 	return friction;
@@ -88,40 +88,50 @@ double Block::frictionForce(int i, double x, double v, double dt)
 void Block::calculateForces(double dt)
 {
 	// Reset forces
-	for (int i = 0; i<numBlocks; i++)
+	for (int i = 0; i<m_numBlocks; i++)
 	{
-		forces[i] = 0;
+		m_forces[i] = 0;
 	}
 
 	// First block
-	double pusherPosition = vPusher*t;
-	forces[0] += springForce(k, d, positions[0], positions[1])
-		+ springForce(kPusher, 0, positions[0], pusherPosition)
-		+ viscousForce(velocities[0], velocities[1])
-		+ frictionForce(0, positions[0], velocities[0], dt);
+	double pusherPosition = m_vPusher*m_t;
+	m_forces[0] += springForce(m_k, m_d, m_positions[0], m_positions[1])
+		+ springForce(m_kPusher, 0, m_positions[0], pusherPosition)
+		+ viscousForce(m_velocities[0], m_velocities[1])
+		+ frictionForce(0, m_positions[0], m_velocities[0], dt);
 
 	// Middle blocks
-	for (int i = 1; i<numBlocks-1; i++)
+	for (int i = 1; i<m_numBlocks-1; i++)
 	{
-		forces[i] += springForce(k, d, positions[i], positions[i+1])
-			-springForce(k, d, positions[i-1], positions[i])
-			+viscousForce(velocities[i], velocities[i+1])
-			-viscousForce(velocities[i-1],velocities[i])
-		    +frictionForce(i, positions[i], velocities[i], dt);
+		m_forces[i] += springForce(m_k, m_d, m_positions[i], m_positions[i+1])
+			-springForce(m_k, m_d, m_positions[i-1], m_positions[i])
+			+viscousForce(m_velocities[i], m_velocities[i+1])
+			-viscousForce(m_velocities[i-1], m_velocities[i])
+		    +frictionForce(i, m_positions[i], m_velocities[i], dt);
 	}
 
 	// Last block
-	forces[numBlocks-1] += springForce(k, -d, positions[numBlocks-1], positions[numBlocks-2])
-		- viscousForce(velocities[numBlocks-1], velocities[numBlocks-2])
-	    + frictionForce(numBlocks-1, positions[numBlocks-1], velocities[numBlocks-1], dt);
+	m_forces[m_numBlocks-1] += springForce(m_k, -m_d, m_positions[m_numBlocks-1], m_positions[m_numBlocks-2])
+		- viscousForce(m_velocities[m_numBlocks-1], m_velocities[m_numBlocks-2])
+	    + frictionForce(m_numBlocks-1, m_positions[m_numBlocks-1], m_velocities[m_numBlocks-1], dt);
 }
 
 void Block::integrate(double dt)
 {
 	// Euler-Cromer
-	for (int i = 0; i<numBlocks; i++)
+	for (int i = 0; i<m_numBlocks; i++)
 	{
-		velocities[i] += forces[i]/m*dt;
-		positions[i] += velocities[i]*dt;
+		m_velocities[i] += m_forces[i]/m_m*dt;
+		m_positions[i] += m_velocities[i]*dt;
 	}
+}
+
+double* Block::getPositions()
+{
+	return m_positions;
+}
+
+double* Block::getStates()
+{
+	return m_states;
 }
