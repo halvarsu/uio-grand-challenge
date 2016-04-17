@@ -1,0 +1,13 @@
+numBlocks 70
+dt 1e-7
+tStop 0.01
+t 0
+vPusher 4e1
+kPusher 4e6
+k 2.3e6
+L 0.14
+M 0.0756
+time_limit 0.002
+mu_s 0.4
+mu_d 0.17
+N 1920

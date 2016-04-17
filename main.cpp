@@ -17,20 +17,13 @@ using namespace std;
 void writeArrayToFile(ofstream & outFile, double * array, int numBlocks);
 void writeVectorToFile(ofstream & outFile, vector<double> &vec, int numBlocks);
 
-
-
 int main() // This function runs when you execute the program.
 {
-	// Choose parameters
-
-	const int numBlocks		= 70;
-	const double dt	   		= 1e-7;
-	const double tStop 		= 0.01;
-
 	// The constructor takes care of the parameters
-	Block blocks(numBlocks);
+	Block blocks("params.txt");
+    cout << blocks;
 
-	int writeFrequency		= (int) (1000 * tStop);
+	int writeFrequency		= (int) (1000 * blocks.m_tStop);
 	cout << "The write frequency is " << writeFrequency << endl;
 
 	// Create output streams
@@ -44,11 +37,11 @@ int main() // This function runs when you execute the program.
 	start = clock();
 
 	int counter = 0;
-	while (blocks.m_t<tStop)
+	while (blocks.m_t<blocks.m_tStop)
 	{
 		// Calculate forces
-		blocks.calculateForces(dt);
-		blocks.integrate(dt);
+		blocks.calculateForces();
+		blocks.integrate();
 
 		// modulo operation to check whether to write output to file on this timestep
 		if ( (counter%writeFrequency) == 0)
@@ -58,15 +51,12 @@ int main() // This function runs when you execute the program.
 			writeArrayToFile(outFileForces, blocks.getForces(), blocks.m_numBlocks);
 			writeArrayToFile(outFileConnectorForces, blocks.getConnectorForces(), blocks.m_numBlocks);
 		}
-		blocks.m_t += dt;
+		blocks.m_t += blocks.m_dt;
 		counter ++;
 	}
-	end = clock();
+    end = clock();
 
 	// Output parameters to file
-	outFileParameters << "nx " << numBlocks << "\n";
-	outFileParameters << "dt " << dt << "\n";
-	outFileParameters << "tStop " << tStop << "\n";
 	outFileParameters << blocks;
 
 	// Close output files
@@ -76,7 +66,7 @@ int main() // This function runs when you execute the program.
 	outFileForces.close();
 	outFileConnectorForces.close();
 
-	cout << "Ran " << counter << " integration steps for "<<numBlocks<<" blocks in " << ((double)end - (double)start)/
+	cout << "Ran " << counter << " integration steps for "<<blocks.m_numBlocks<<" blocks in " << ((double)end - (double)start)/
 		CLOCKS_PER_SEC << " seconds" << endl;
 	return 0;
 
@@ -90,5 +80,6 @@ void writeVectorToFile(ofstream & outFile, vector<double> &vec, int numBlocks)
 
 void writeArrayToFile(ofstream & outFile, double * array, int numBlocks)
 {
-	outFile.write(reinterpret_cast<char*>(array), numBlocks*sizeof(double));
+    if(array)
+        outFile.write(reinterpret_cast<char*>(array), numBlocks*sizeof(array[0]));
 }

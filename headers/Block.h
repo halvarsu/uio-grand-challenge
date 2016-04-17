@@ -6,6 +6,12 @@
 
 #include <iostream>
 #include <cmath>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
+#include <iterator>
+#include <stdlib.h>
 
 template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
@@ -25,6 +31,7 @@ private:
 	double m_mu_d    ;
 	double m_k_0     ;
 	double m_f_N     ;
+    double m_N       ;
 	double m_time_limit; // Crap, misaligned
 	double* m_start_positions; // Even worse!
 	double* m_states  ;
@@ -34,20 +41,31 @@ private:
 	double* m_forces;
 	double* m_connectorForces;
 public:
-	const int m_numBlocks;
+	int m_numBlocks  ;
 	double m_t       ;
+    double m_tStop   ;
+    double m_dt      ;
 	
 	friend std::ostream& operator <<(std::ostream& os, Block const& blocks)
 		{
-			return os  << "vPusher " << blocks.m_vPusher << "\n"
+			return os  << "nx " << blocks.m_numBlocks << "\n"
+                       << "dt " << blocks.m_dt << "\n"
+                       << "tStop " << blocks.m_tStop << "\n"
+                       << "vPusher " << blocks.m_vPusher << "\n"
 					   << "kPusher " << blocks.m_kPusher << "\n"
 					   << "k " << blocks.m_k << "\n"
 					   << "L " << blocks.m_L << "\n"
 					   << "M " << blocks.m_M << "\n"
 					   << "m " << blocks.m_m << "\n"
-					   << "eng " << blocks.m_eng << "\n";
+					   << "eng " << blocks.m_eng << "\n"
+                       << "mu_s " << blocks.m_mu_s << "\n"
+                       << "mu_d " << blocks.m_mu_d << "\n"
+                       << "k_0 " << blocks.m_k_0 << "\n"
+                       << "f_N " << blocks.m_f_N << "\n"
+                       << "N " << blocks.m_f_N << "\n"
+                       << "time_limit " << blocks.m_time_limit << "\n";
 		}
-	Block(int numBlocks);
+	Block(std::string filenameParameters);
 
 	~Block();
     // Trivial functions
@@ -65,11 +83,13 @@ public:
 
 	double viscousForce(double v1, double v2);
 
-	double frictionForce(int i, double x, double v, double dt);
+	double frictionForce(int i, double x, double v);
 
-	void calculateForces(double dt);
+	void calculateForces();
 
-	void integrate(double dt);
+	void integrate();
+
+    void readParameters(std::string filenameParameters);
 };
 
 

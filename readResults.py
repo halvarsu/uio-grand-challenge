@@ -139,20 +139,21 @@ class FrictionAnalyser:
 
         # The state of the connectors
         plt.subplot(223)
-        plt.pcolormesh(self.states, cmap='Greys')
+        _cmap = plt.get_cmap('Greys', 2)  # Attempt at binary colobar
+        plt.pcolormesh(self.states, cmap=_cmap)
         plt.xlabel('Block index')
         plt.ylabel('Time step')
-        plt.colorbar()
         plt.title("States of the connectors")
+        cax = plt.colorbar(ticks=[0, 1])
+        cax.set_ticklabels(['Static', 'Dynamic'])
 
-        # Plot the positions
+        # Plot the forces
         plt.subplot(224)
-        positions = self.positions - self.positions[0]
-        plt.pcolormesh(positions, cmap=colormap)
+        plt.pcolormesh(self.forces, cmap=colormap)
         plt.xlabel('Block index')
         plt.ylabel('Time step')
         plt.colorbar()
-        plt.title("Positions")
+        plt.title("Forces")
 
         plt.tight_layout()
         plt.show()
@@ -180,6 +181,8 @@ def get_args():
                         help="Plots the state of each connector")
     parser.add_argument("-F", "--full_plot", action="store_true",
                         help="Plots driving force, connector forces, states and")
+    parser.add_argument("--plot_connectors", action='store_true',
+                        help="Plots the connector forces")
     return parser.parse_args()
 
 
@@ -197,6 +200,8 @@ if __name__ == "__main__":
         data = analyser.forces
     elif args.plot_state:
         data = analyser.states
+    elif args.plot_connectors:
+        data = analyser.connectorForces
     else:
         data = analyser.positions
 
