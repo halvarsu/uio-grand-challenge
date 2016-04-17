@@ -7,8 +7,8 @@
 #include <cmath>
 #include <time.h>
 #include <vector>
-#include "headers/Block.h"
-
+#include "headers/Blocks.h"
+#include "headers/Params.h"
 
 using namespace std;
 
@@ -20,7 +20,8 @@ void writeVectorToFile(ofstream & outFile, vector<double> &vec, int numBlocks);
 int main() // This function runs when you execute the program.
 {
 	// The constructor takes care of the parameters
-	Block blocks("params.txt");
+    Params params("params.txt");
+	Blocks blocks(params);
     cout << blocks;
 
 	int writeFrequency		= (int) (1000 * blocks.m_tStop);

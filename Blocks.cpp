@@ -1,9 +1,9 @@
-#include "headers/Block.h"
+#include "headers/Blocks.h"
 
-Block::Block(std::string filenameParameters)
+Blocks::Blocks(Params & params): m_numBlocks(params.m_numBlocks)
 {
-    readParameters(filenameParameters);
-    
+    copyParameters(params);
+
 	m_d				   = m_L/(m_numBlocks-1); // Distance between blocks in block chain
 	m_m				   = m_M/m_numBlocks;
 	m_eng              = sqrt(0.1)*sqrt(m_k*m_m);
@@ -27,7 +27,7 @@ Block::Block(std::string filenameParameters)
 
 }
 
-Block::~Block()
+Blocks::~Blocks()
 {
 	delete [] m_timers;
 	delete [] m_start_positions;
@@ -38,18 +38,18 @@ Block::~Block()
 	delete [] m_connectorForces;
 }
 
-double Block::springForce(double k, double d, double x1, double x2)
+double Blocks::springForce(double k, double d, double x1, double x2)
 {
 	return k*(x2-x1-d);
 }
 
-double Block::viscousForce(double v1, double v2)
+double Blocks::viscousForce(double v1, double v2)
 {
 	return m_eng*(v2-v1);
 }
 
 
-double Block::frictionForce(int i, double x, double v)
+double Blocks::frictionForce(int i, double x, double v)
 {
 	double friction = 0;
 
@@ -77,7 +77,7 @@ double Block::frictionForce(int i, double x, double v)
 
 }
 
-void Block::calculateForces()
+void Blocks::calculateForces()
 {
 	// Reset forces
 	for (int i = 0; i<m_numBlocks; i++)
@@ -114,7 +114,7 @@ void Block::calculateForces()
 		+ m_connectorForces[m_numBlocks-1];
 }
 
-void Block::integrate()
+void Blocks::integrate()
 {
 	// Euler-Cromer
 	for (int i = 0; i<m_numBlocks; i++)
@@ -124,50 +124,19 @@ void Block::integrate()
 	}
 }
 
-void Block::readParameters(std::string filenameParameters)
+void Blocks::copyParameters(Params &params)
 {
-    std::ifstream infileParameters(filenameParameters);
-    // ifstream is used for reading files
-    if (!infileParameters)
-    {
-        std::cerr << "The parameter file could not be opened for reading." << std::endl;
-    }
-
-    std::string line;
-    while (getline(infileParameters, line))
-    {
-        // Cut the string into substrings
-        std::istringstream iss(line);  // Stringstream to manipulate the stream
-        std::vector<std::string> tokens; // Tokens contains the substrings
-        copy(std::istream_iterator<std::string>(iss), // Wierd shit
-             std::istream_iterator<std::string>(),
-             back_inserter(tokens));
-
-        if (tokens[0] == "vPusher") {
-            m_vPusher = atof(tokens[1].c_str());
-        } else if(tokens[0] == "kPusher"){
-            m_kPusher = atof(tokens[1].c_str());
-        } else if(tokens[0] == "k"){
-            m_k = atof(tokens[1].c_str());
-        } else if(tokens[0] == "L"){
-            m_L = atof(tokens[1].c_str());
-        } else if(tokens[0] == "M"){
-            m_M = atof(tokens[1].c_str());
-        } else if(tokens[0] == "time_limit"){
-            m_time_limit = atof(tokens[1].c_str());
-        } else if(tokens[0] == "mu_s"){
-            m_mu_s = atof(tokens[1].c_str());
-        } else if(tokens[0] == "mu_d"){
-            m_mu_d = atof(tokens[1].c_str());
-        } else if(tokens[0] == "N"){
-            m_N = atof(tokens[1].c_str());
-        } else if(tokens[0] == "numBlocks"){
-            m_numBlocks = atoi(tokens[1].c_str()); 
-        } else if(tokens[0] == "dt"){
-            m_dt = atof(tokens[1].c_str());
-        } else if(tokens[0] == "tStop"){
-            m_tStop = atof(tokens[1].c_str());
-        }
-    }
-                                      
+    m_vPusher 	= params.m_vPusher;
+    m_kPusher  = params.m_kPusher;
+    m_k	    = params.m_k;
+    m_L	    = params.m_L;
+    m_d	    = params.m_d;
+    m_M	    = params.m_M;
+    m_mu_s	    = params.m_mu_s;
+    m_mu_d	    = params.m_mu_d;
+    m_k_0	    = params.m_k_0;
+    m_N       	= params.m_N;
+    m_time_limit = params.m_time_limit;
+    m_tStop   = params.m_tStop;
+    m_dt      = params.m_dt;
 }
