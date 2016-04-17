@@ -24,13 +24,12 @@ int main() // This function runs when you execute the program.
 	Blocks blocks(params);
     cout << blocks;
 
-	int writeFrequency		= (int) (1000 * blocks.m_tStop);
+	const int writeFrequency = (int) (1000 * blocks.m_tStop);
 	cout << "The write frequency is " << writeFrequency << endl;
 
 	// Create output streams
 	ofstream outFilePositions("output/positions.bin");
 	ofstream outFileStates("output/states.bin");
-	ofstream outFileParameters("output/parameters.txt");
 	ofstream outFileForces("output/forces.bin");
 	ofstream outFileConnectorForces("output/connectorForces.bin");
 
@@ -58,6 +57,7 @@ int main() // This function runs when you execute the program.
     end = clock();
 
 	// Output parameters to file
+    ofstream outFileParameters("output/parameters.txt");
 	outFileParameters << blocks;
 
 	// Close output files

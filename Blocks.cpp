@@ -48,7 +48,6 @@ double Blocks::viscousForce(double v1, double v2)
 	return m_eng*(v2-v1);
 }
 
-
 double Blocks::frictionForce(int i, double x, double v)
 {
 	double friction = 0;
@@ -126,17 +125,17 @@ void Blocks::integrate()
 
 void Blocks::copyParameters(Params &params)
 {
-    m_vPusher 	= params.m_vPusher;
-    m_kPusher  = params.m_kPusher;
-    m_k	    = params.m_k;
-    m_L	    = params.m_L;
-    m_d	    = params.m_d;
-    m_M	    = params.m_M;
-    m_mu_s	    = params.m_mu_s;
-    m_mu_d	    = params.m_mu_d;
-    m_k_0	    = params.m_k_0;
-    m_N       	= params.m_N;
+    m_vPusher    = params.m_vPusher;
+    m_kPusher    = params.m_kPusher;
+    m_k	         = params.m_k;
+    m_L	         = params.m_L;
+    m_d	         = params.m_d;
+    m_M	         = params.m_M;
+    m_mu_s	     = params.m_mu_s;
+    m_mu_d	     = params.m_mu_d;
+    m_k_0	     = params.m_k_0;
+    m_N          = params.m_N;
     m_time_limit = params.m_time_limit;
-    m_tStop   = params.m_tStop;
-    m_dt      = params.m_dt;
+    m_tStop      = params.m_tStop;
+    m_dt         = params.m_dt;
 }
