@@ -13,6 +13,12 @@ template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
 
+struct connector{
+    double state;
+    double x0;
+    double timer;
+};
+
 class Blocks{
 private:
 	double m_vPusher ;    
@@ -29,19 +35,18 @@ private:
 	double m_f_N     ;
     double m_N       ;
 	double m_time_limit; // Crap, misaligned
-	double* m_start_positions; // Even worse!
 	double* m_states  ;
-	double* m_timers;
 	double* m_positions;
 	double* m_velocities;
 	double* m_forces;
 	double* m_connectorForces;
+    connector* m_connectors;
 public:
 	const int m_numBlocks  ;
 	double m_t       ;
     double m_tStop   ;
     double m_dt      ;
-	
+
 	friend std::ostream& operator <<(std::ostream& os, Blocks const& blocks)
 		{
 			return os  << "nx " << blocks.m_numBlocks << "\n"
@@ -87,7 +92,8 @@ public:
 
     void copyParameters(Params & params);
 
-};
+    void fillStatesArray(); // A very inefficient solution
 
+};
 
 #endif /* BLOCK_H */

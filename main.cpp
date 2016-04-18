@@ -46,6 +46,7 @@ int main() // This function runs when you execute the program.
 		// modulo operation to check whether to write output to file on this timestep
 		if ( (counter%writeFrequency) == 0)
 		{
+            blocks.fillStatesArray(); // Should be removed
 			writeArrayToFile(outFilePositions, blocks.getPositions(), blocks.m_numBlocks);
             writeArrayToFile(outFileStates, blocks.getStates(), blocks.m_numBlocks);
 			writeArrayToFile(outFileForces, blocks.getForces(), blocks.m_numBlocks);

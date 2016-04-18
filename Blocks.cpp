@@ -9,33 +9,33 @@ Blocks::Blocks(Params & params): m_numBlocks(params.m_numBlocks)
 	m_eng              = sqrt(0.1)*sqrt(m_k*m_m);
     m_f_N              = m_N/m_numBlocks;
 	m_k_0              = sqrt(39.2e9/m_f_N);  
+/usr/lib/python3.5/site-packages/IPython/html.py:14: ShimWarning: The `IPython.html` package has been deprecated. You should import from `notebook` instead. `IPython.html.widgets` has moved to `ipywidgets`.
+  "`IPython.html.widgets` has moved to `ipywidgets`.", ShimWarning)
 
-	m_start_positions  = new double[m_numBlocks];
 	m_states		   = new double[m_numBlocks];
 	m_positions		   = new double[m_numBlocks];
-	m_timers		   = new double[m_numBlocks] ();
 	m_velocities	   = new double[m_numBlocks] ();
 	m_forces		   = new double[m_numBlocks] ();
 	m_connectorForces  = new double[m_numBlocks] ();
+    m_connectors       = new connector[m_numBlocks] ();
 
 	// Initialize the containers
 	for (int i = 0; i < m_numBlocks; i++) {
-		m_start_positions[i] = m_d*i;
 		m_positions[i] = m_d*i;
-		m_states[i] = STATIC;
+		m_connectors[i].x0 = m_d*i;
+		m_connectors[i].state = STATIC;
 	}
 
 }
 
 Blocks::~Blocks()
 {
-	delete [] m_timers;
-	delete [] m_start_positions;
 	delete [] m_positions;
 	delete [] m_velocities;
 	delete [] m_forces;
 	delete [] m_states;
 	delete [] m_connectorForces;
+    delete [] m_connectors;
 }
 
 double Blocks::springForce(double k, double d, double x1, double x2)
@@ -52,24 +52,24 @@ double Blocks::frictionForce(int i, double x, double v)
 {
 	double friction = 0;
 
-	if (m_states[i]) {
-		friction = -springForce(m_k_0, 0, m_start_positions[i], x);
+	if (m_connectors[i].state) {
+		friction = -springForce(m_k_0, 0, m_connectors[i].x0, x);
 		if (std::abs(friction) > m_mu_s * m_f_N) {
-			m_states[i] = DYNAMIC;     // Change state
-			m_timers[i] = m_t;  // Start timer
+			m_connectors[i].state = DYNAMIC;     // Change state
+			m_connectors[i].timer = 0;  // Start timer
 		}
 	}
 
 	// If the string is subsequently not attached
-	if (!m_states[i]) {
+	if (!m_connectors[i].state) {
 		friction = -m_mu_d * m_f_N * sgn(v);
-		m_timers[i] += m_dt;
+        // Potential bug: When the timer starts, it is immediately incremented
+		m_connectors[i].timer += m_dt;
 
 		// Check the timer
-		if (m_timers[i] > m_time_limit) {
-			m_states[i] = STATIC;
-			m_states[i] = true;
-			m_start_positions[i] = x;
+		if (m_connectors[i].timer > m_time_limit) {
+			m_connectors[i].state = STATIC;
+			m_connectors[i].x0 = x;
 		}
 	}
 	return friction;
@@ -138,4 +138,13 @@ void Blocks::copyParameters(Params &params)
     m_time_limit = params.m_time_limit;
     m_tStop      = params.m_tStop;
     m_dt         = params.m_dt;
+}
+
+// A stupid function
+void Blocks::fillStatesArray()
+{
+    for (int i = 0; i < m_numBlocks; i++)
+    {
+        m_states[i] = m_connectors[i].state;
+    }
 }
