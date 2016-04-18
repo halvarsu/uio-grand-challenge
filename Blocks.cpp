@@ -9,8 +9,6 @@ Blocks::Blocks(Params & params): m_numBlocks(params.m_numBlocks)
 	m_eng              = sqrt(0.1)*sqrt(m_k*m_m);
     m_f_N              = m_N/m_numBlocks;
 	m_k_0              = sqrt(39.2e9/m_f_N);  
-/usr/lib/python3.5/site-packages/IPython/html.py:14: ShimWarning: The `IPython.html` package has been deprecated. You should import from `notebook` instead. `IPython.html.widgets` has moved to `ipywidgets`.
-  "`IPython.html.widgets` has moved to `ipywidgets`.", ShimWarning)
 
 	m_states		   = new double[m_numBlocks];
 	m_positions		   = new double[m_numBlocks];
