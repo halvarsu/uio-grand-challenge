@@ -48,6 +48,8 @@ void Params::readParameters(std::string filenameParameters)
             m_dt = atof(tokens[1].c_str());
         } else if(tokens[0] == "tStop"){
             m_tStop = atof(tokens[1].c_str());
+        } else if(tokens[0] == "numConnectors"){
+            m_numConnectors = atoi(tokens[1].c_str());
         }
     }
     infileParameters.close();

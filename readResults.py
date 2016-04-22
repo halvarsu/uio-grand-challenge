@@ -14,10 +14,10 @@ class FrictionAnalyser:
                  filenameStates, filenameForces, filenameConnectorForces):
         self.parameterFileName = filenameParameters
         self.readParameters()
-        self.positions = self.readData(filenamePositions)
-        self.states = self.readData(filenameStates)
-        self.forces = self.readData(filenameForces)
-        self.connectorForces = self.readData(filenameConnectorForces)
+        self.positions = self.readData(filenamePositions, self.nx)
+        self.states = self.readData(filenameStates, self.numConnectors*self.nx)
+        self.forces = self.readData(filenameForces, self.nx)
+        self.connectorForces = self.readData(filenameConnectorForces, self.numConnectors*self.nx)
 
     def readParameters(self):
         ifile = open(self.parameterFileName, "r")
@@ -26,11 +26,10 @@ class FrictionAnalyser:
             words = line.split()
             exec("self.%s=%f" % (words[0], float(words[1])))
 
-    def readData(self, data_file):
+    def readData(self, data_file, resizer):
         data = np.fromfile(data_file)
-        nx = int(self.nx)
-        nt = len(data) // nx
-        data.resize(nt, nx)
+        nt = len(data) // int(resizer)
+        data.resize(nt, int(resizer))
         return data
 
     def pcolorplot(self, args, data):
@@ -139,13 +138,14 @@ class FrictionAnalyser:
 
         # The state of the connectors
         plt.subplot(223)
-        _cmap = plt.get_cmap('Greys', 2)  # Attempt at binary colobar
-        plt.pcolormesh(self.states, cmap=_cmap)
-        plt.xlabel('Block index')
+        #_cmap = plt.get_cmap('Greys', 2)  # Attempt at binary colobar
+        plt.pcolormesh(self.states, cmap=colormap)
+        plt.xlabel('Connector index')
         plt.ylabel('Time step')
         plt.title("States of the connectors")
-        cax = plt.colorbar(ticks=[0, 1])
-        cax.set_ticklabels(['Static', 'Dynamic'])
+        cax = plt.colorbar()#ticks=[0, 1])
+        #cax.set_ticklabels(['Static', 'Dynamic'])
+        print(self.states[0])
 
         # Plot the forces
         plt.subplot(224)

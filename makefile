@@ -1,13 +1,15 @@
 all:
-	g++ -g -std=c++11 main.cpp Blocks.cpp Params.cpp -o main
-
-main:
-	g++ -g main.cpp -o main
-
-blocks:
-	g++ -g Blocks.cpp -o Blocks.o
-
+	g++ -g -std=c++11 main.cpp Block.cpp System.cpp Params.cpp -o main
+paranoid:
+	g++ -g -std=c++11 -pedantic -Wall -Wextra -Wcast-align -Wcast-qual \
+	-Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self \
+	-Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept \
+	-Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow \
+	-Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 \
+	-Wswitch-default -Wundef -Werror -Wno-unused main.cpp Block.cpp System.cpp \
+	Params.cpp -o main
 fast:
-	g++ -std=c++11 -Ofast -march=native -flto -fwhole-program main.cpp Blocks.cpp Params.cpp -o main
+	g++ -std=c++11 -Ofast -march=native -flto -fwhole-program main.cpp \
+	Block.cpp Params.cpp System.cpp -o main
 clean:
 	rm *o main

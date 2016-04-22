@@ -27,6 +27,7 @@ public:
 	int m_numBlocks  ;
     double m_tStop   ;
     double m_dt      ;
+    int m_numConnectors;
 
     Params(std::string filenameParameters);
 
