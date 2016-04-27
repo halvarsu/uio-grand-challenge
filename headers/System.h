@@ -46,7 +46,7 @@ public:
 	const int m_numBlocks  ;   // Number of blocks
     const int m_numConnectors; // Number of connectors
 	double m_t       ;
-    double m_tStop   ;
+    const double m_tStop   ;
     double m_dt      ;
     std::vector<Block*> m_blocks;
 
@@ -71,7 +71,7 @@ public:
                        << "time_limit " << system.m_time_limit << "\n"
                        << "numConnectors " << system.m_numConnectors << "\n";
 		}
-	System(Params & params);
+	System(const Params & params);
 
 	~System();
     // Trivial functions
@@ -89,7 +89,7 @@ public:
 
     void integrate();
 
-    void copyParameters(Params & params);
+    void copyParameters(const Params & params);
 
     void fillStatesArray(); // A very inefficient solution
 

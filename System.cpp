@@ -1,7 +1,8 @@
 #include "headers/System.h"
 
-System::System(Params & params): m_numBlocks(params.m_numBlocks),
-    m_numConnectors(params.m_numConnectors)
+System::System(const Params & params): m_numBlocks(params.m_numBlocks),
+                                       m_numConnectors(params.m_numConnectors),
+                                       m_tStop(params.m_tStop)
 {
     copyParameters(params);
 
@@ -38,7 +39,7 @@ System::~System(){
     delete [] m_connectorForces;
 }
 
-void System::copyParameters(Params &params)
+void System::copyParameters(const Params &params)
 {
     m_vPusher    = params.m_vPusher;
     m_kPusher    = params.m_kPusher;
@@ -51,7 +52,6 @@ void System::copyParameters(Params &params)
     m_k_0	     = params.m_k_0;
     m_N          = params.m_N;
     m_time_limit = params.m_time_limit;
-    m_tStop      = params.m_tStop;
     m_dt         = params.m_dt;
 }
 

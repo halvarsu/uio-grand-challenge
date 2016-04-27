@@ -11,4 +11,4 @@ time_limit 0.002
 mu_s 0.4
 mu_d 0.17
 N 0.71463
-numConnectors 3 
+numConnectors 2 
