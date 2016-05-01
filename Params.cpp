@@ -5,6 +5,13 @@ Params::Params(std::string filenameParameters)
     readParameters(filenameParameters);
 }
 
+
+/*
+  Read the paramters from file. It reads a text file line by line, splitting
+  each line into its substrings delimited by a space. Only the first and the
+  second substring are consideres, making the safe to write comments to the
+  parameters. The first substring is the variable name, the second is its value.
+ */
 void Params::readParameters(std::string filenameParameters)
 {
     std::ifstream infileParameters(filenameParameters);
@@ -42,14 +49,18 @@ void Params::readParameters(std::string filenameParameters)
             m_mu_d = atof(tokens[1].c_str());
         } else if(tokens[0] == "N"){
             m_N = atof(tokens[1].c_str());
-        } else if(tokens[0] == "numBlocks"){
-            m_numBlocks = atoi(tokens[1].c_str()); 
+        } else if(tokens[0] == "numConnectors"){
+            m_numConnectors = atoi(tokens[1].c_str()); 
         } else if(tokens[0] == "dt"){
             m_dt = atof(tokens[1].c_str());
         } else if(tokens[0] == "tStop"){
             m_tStop = atof(tokens[1].c_str());
-        } else if(tokens[0] == "numConnectors"){
-            m_numConnectors = atoi(tokens[1].c_str());
+        } else if(tokens[0] == "numBlocksX"){
+            m_numBlocksX = atoi(tokens[1].c_str());
+        } else if(tokens[0] == "numBlocksY"){
+            m_numBlocksY = atoi(tokens[1].c_str());
+        } else if(tokens[0] == "pusherBlockPosition"){
+            m_pusherBlockPosition = atoi(tokens[1].c_str());
         }
     }
     infileParameters.close();

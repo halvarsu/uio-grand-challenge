@@ -1,42 +1,105 @@
 #include "headers/System.h"
 
-System::System(const Params & params): m_numBlocks(params.m_numBlocks),
+System::System(const Params & params): m_numBlocksX(params.m_numBlocksX),
+                                       m_numBlocksY(params.m_numBlocksY),
                                        m_numConnectors(params.m_numConnectors),
-                                       m_tStop(params.m_tStop)
+                                       m_tStop(params.m_tStop),
+                                       m_pusherBlockPosition(params.m_pusherBlockPosition)
 {
+    // Copy the rest TODO: Switch to initialization list
     copyParameters(params);
 
-	m_d				   = m_L/(m_numBlocks-1);
-	m_m				   = m_M/m_numBlocks;
+    // Compute more coefficients
+	m_d				   = m_L/(m_numBlocksX-1);
+	m_m				   = m_M/m_numBlocksX;
 	m_eta              = sqrt(0.1)*sqrt(m_k*m_m);
-    m_f_N              = m_N/m_numBlocks;
+    m_f_N              = m_N/m_numBlocksX;
 	m_k_0              = sqrt(39.2e9*m_f_N);
     m_connector_d      = m_d/m_numConnectors;
 
-	m_states		   = new double[m_numBlocks*m_numConnectors];
-	m_positions		   = new double[m_numBlocks];
-	m_velocities	   = new double[m_numBlocks] ();
-	m_forces		   = new double[m_numBlocks] ();
-	m_connectorForces  = new double[m_numBlocks*m_numConnectors] ();
+    // Allocate arrays
+	m_states		   = new double[m_numBlocksX*m_numConnectors];
+	m_positions		   = new Vector[m_numBlocksY*m_numBlocksX]();
+	m_velocities	   = new Vector[m_numBlocksY*m_numBlocksX]();
+	m_forces		   = new Vector[m_numBlocksY*m_numBlocksX]();
+	m_connectorForces  = new Vector[m_numBlocksX*m_numConnectors] ();
+    // Initilize the arrays
+    for (int y = 0; y < m_numBlocksY; y++) {
+        // Initialize the position
+        for (int x = 0; x < m_numBlocksX; x++) {
+            m_positions[y*m_numBlocksX+x].x = m_d*x;
+            m_positions[y*m_numBlocksX+x].y = m_d*y;
+        }
 
-	// Initialize the containers
-	for (int i = 0; i < m_numBlocks; i++) {
-		m_positions[i] = m_d*i;
-	}
-
-    // Construct the entire block structure
-    m_blocks.push_back(new FirstBlock(*this, 0));
-    for (int i = 1; i < m_numBlocks-1; i++) 
-        m_blocks.push_back(new Block(*this, i));
-    m_blocks.push_back(new LastBlock(*this, m_numBlocks-1));
+    }
+    createBlocks();
 }
 
 System::~System(){
+    // Close all open files
+    m_ofStates.close();
+    m_ofForces.close();
+    m_ofPositions.close();
+    m_ofVelocities.close();
+    m_ofConnectors.close();
+
+    // Deallocate memory
     delete [] m_positions;
     delete [] m_velocities;
     delete [] m_forces;
     delete [] m_states;
     delete [] m_connectorForces;
+}
+
+void System::createBlocks()
+{
+    // Construct the block structure
+    m_blocks.resize(m_numBlocksY);
+    for (int y = 0; y < m_numBlocksY; y++) {
+        m_blocks[y].resize(m_numBlocksX);
+    }
+    // Make the top layer
+    for (int x = 0; x < m_numBlocksX; x++){
+        m_blocks[0][x] = new TopBlock(*this, 0, x);
+    }
+
+    // Make the rest, but not the bottom
+    for (int y = 1; y < m_numBlocksY-1; y++){
+        for (int x = 0; x < m_numBlocksX; x++)
+            m_blocks[y][x] = new Block(*this, y, x);
+    }
+    // Make the bottom layer
+    for (int x = 0; x < m_numBlocksX; x++){
+        m_blocks[m_numBlocksY-1][x] = new BottomBlock(*this, m_numBlocksY-1, x);
+    }
+
+    // Make the pusher block
+    m_blocks[m_pusherBlockPosition][0] = new PusherBlock(*this, m_pusherBlockPosition, 0);
+
+    // Link the neighbours
+    /*
+      TL = Top Left, L = Left, BL = Bottom Left, B = Bottom, @ = Block
+      .....TL
+      ..../.
+      ...@-L
+      ...|\.
+      ...B.BL
+
+      Format of the array:
+      [TL BL L B]
+     */
+    for (int y = 0; y < m_numBlocksY; y++){
+        for (int x = 0; x < m_numBlocksX; x++){
+            if(y > 0 && x < m_numBlocksX-1) // Top left
+                m_blocks[y][x]->addNeighbour(*m_blocks[y-1][x+1]);
+            if(y < m_numBlocksY-1 && x < m_numBlocksX-1) // Bottom left
+                m_blocks[y][x]->addNeighbour(*m_blocks[y+1][x+1]);
+            if(x < m_numBlocksX-1) // Left
+                m_blocks[y][x]->addNeighbour(*m_blocks[y][x+1]);
+            if(y < m_numBlocksY-1) // Bottom
+                m_blocks[y][x]->addNeighbour(*m_blocks[y+1][x]);
+        }
+    }
 }
 
 void System::copyParameters(const Params &params)
@@ -57,39 +120,62 @@ void System::copyParameters(const Params &params)
 
 void System::simulate()
 {
-    // Calculate the forces on each block
-    // for (int i = 0; i < m_numBlocks; i++)
-    //     m_blocks[i]->calculateForces();
 
-    // // Integrate
-    // // Euler-Cromer
-	// for (int i = 0; i<m_numBlocks; i++)
-	// {
-	// 	m_velocities[i] += m_forces[i]/m_m*m_dt;
-	// 	m_positions[i] += m_velocities[i]*m_dt;
-	// }
-
+    // Reset the and recalculate the forces
+    for (int y = 0; y < m_numBlocksY; y++) {
+        for (int x = 0; x < m_numBlocksX; x++) {
+            m_forces[y*m_numBlocksX+x] = Vector(0,0);
+        }
+    }
+    for (int y = 0; y < m_numBlocksY; y++) {
+        for (int x = 0; x < m_numBlocksX; x++) {
+            m_blocks[y][x]->calculateForces();
+        }
+    }
     /* Velocity-vervlet
        Algorithm:
        v_(n+1/2) = v_n + f_n*delta_t / (2*m)
        r_(n+1) = r_n + v_(n+1/2)*delta_t
        v_(n+1) = v_(n+1/2) + f_(n+1)*delta_t / (2*m)
      */
-    for (int i = 0; i < m_numBlocks; i++) {
-        double vel_halfstep = m_velocities[i] + m_forces[i]*m_dt/(2*m_m);
-        m_positions[i] += vel_halfstep*m_dt;
-        m_blocks[i]->calculateForces();
-        m_velocities[i] = vel_halfstep + m_forces[i]*m_dt/(2*m_m);
+    for (int x = 0; x < m_numBlocksX; x++) {
+        for (int y = 0; y < m_numBlocksY; y++) {
+            Vector vel_halfstep = m_velocities[y*m_numBlocksX+x] + m_forces[y*m_numBlocksX+x]*m_dt/(2*m_m);
+            m_positions[y*m_numBlocksX+x] += vel_halfstep*m_dt;
+            m_velocities[y*m_numBlocksX+x] = vel_halfstep + m_forces[y*m_numBlocksX+x]*m_dt/(2*m_m);
+        }
     }
 }
 
+
 void System::fillStatesArray()
 {
-    // Only computes for one connector
-    for (int i = 0; i < m_numBlocks; i++)
+    for (int x = 0; x < m_numBlocksX; x++)
     {
-        for (int j = 0; j < m_numConnectors; j++) {
-            m_states[i*m_numConnectors+j] = m_blocks[i]->m_connectors[j].state;
+        for (int y = 0; y < m_numConnectors; y++) {
+            m_states[x*m_numConnectors+y] = m_blocks[m_numBlocksY-1][x]->m_connectors[y].state;
         }
     }
+}
+
+void System::dumpData()
+{
+    fillStatesArray();
+    writeArrayToFile(m_ofStates, m_states, m_numBlocksX*m_numConnectors);
+    writeArrayToFile(m_ofPositions, m_positions, m_numBlocksX*m_numBlocksY);
+    writeArrayToFile(m_ofVelocities, m_velocities, m_numBlocksX*m_numBlocksY);
+    writeArrayToFile(m_ofForces, m_forces, m_numBlocksX*m_numBlocksY);
+    writeArrayToFile(m_ofConnectors, m_connectorForces, m_numBlocksX*m_numConnectors);
+}
+
+void System::writeArrayToFile(std::ofstream & outFile, double * array, int numBlocks)
+{
+    if(array)
+        outFile.write(reinterpret_cast<char*>(array), numBlocks*sizeof(array[0]));
+}
+
+void System::writeArrayToFile(std::ofstream & outFile, Vector * array, int numBlocks)
+{
+    if(array)
+        outFile.write(reinterpret_cast<char*>(array), numBlocks*sizeof(Vector));
 }

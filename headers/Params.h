@@ -24,10 +24,12 @@ public:
 	double m_k_0     ;
     double m_N       ;
 	double m_time_limit; // Crap, misaligned
-	int m_numBlocks  ;
+	int m_numBlocksX ;
+    int m_numBlocksY ; 
     double m_tStop   ;
     double m_dt      ;
     int m_numConnectors;
+    int m_pusherBlockPosition;
 
     Params(std::string filenameParameters);
 

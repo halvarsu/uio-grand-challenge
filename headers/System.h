@@ -3,21 +3,24 @@
 
 #define STATIC 1.0
 #define DYNAMIC 0.0
+#define SQRT2 1.4142135623730950488016887
 
 #include <iostream>
+#include <fstream>
 #include <cmath>
 #include <string>
 #include <vector>
 #include "Params.h"
+#include "Vector.h"
 #include "Block.h"
 
 class Block;
 struct connector;
 class Params;
+class Vector;
 template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
-
 
 class System{
 private:
@@ -38,22 +41,35 @@ private:
     double m_connector_d;      // Length between each connector on a block
 	double m_time_limit;       // Time for connector to by in dynamic state
 	double* m_states  ;        // States to be dumped to file
-	double* m_positions;       // Position of each block
-	double* m_velocities;      // Velocity of each block
-	double* m_forces;          // Total froce on each block
-	double* m_connectorForces; // Force from each connector
+	Vector* m_positions;       // Position of each block
+	Vector* m_velocities;      // Velocity of each block
+	Vector* m_forces;          // Total froce on each block
+	Vector* m_connectorForces; // Force from each connector
+    const int m_pusherBlockPosition; // Index of the block pushing
+    /*
+      NOTE: A multidimensional array is not light weight. A quicker method is
+      allocating a large block of memory, double* array = new double[sizeX*sizeY]
+     */
 public:
-	const int m_numBlocks  ;   // Number of blocks
+	const int m_numBlocksX  ;  // Number of blocks in the x-direction
+    const int m_numBlocksY  ;  // Number of blocks in the y-direction
     const int m_numConnectors; // Number of connectors
 	double m_t       ;
     const double m_tStop   ;
     double m_dt      ;
-    std::vector<Block*> m_blocks;
+    std::vector< std::vector<Block*> > m_blocks;          // Array for pointers
+                                                          // to Block objects
+    std::ofstream m_ofStates;
+    std::ofstream m_ofPositions;
+    std::ofstream m_ofVelocities;
+    std::ofstream m_ofForces;
+    std::ofstream m_ofConnectors;
 
 
 	friend std::ostream& operator <<(std::ostream& os, System const& system)
 		{
-			return os  << "nx " << system.m_numBlocks << "\n"
+			return os  << "nx " << system.m_numBlocksX << "\n"
+                       << "ny " << system.m_numBlocksY << "\n"
                        << "dt " << system.m_dt << "\n"
                        << "tStop " << system.m_tStop << "\n"
                        << "vPusher " << system.m_vPusher << "\n"
@@ -69,22 +85,33 @@ public:
                        << "f_N " << system.m_f_N << "\n"
                        << "N " << system.m_N << "\n"
                        << "time_limit " << system.m_time_limit << "\n"
-                       << "numConnectors " << system.m_numConnectors << "\n";
+                       << "numConnectors " << system.m_numConnectors << "\n"
+                       << "pusherPosition " << system.m_pusherBlockPosition << "\n";
 		}
 	System(const Params & params);
 
 	~System();
     // Trivial functions
+    void openStatesFile(std::string filename){m_ofStates.open(filename);};
 
-	double* getPositions(){return m_positions;}
+    void openForcesFile(std::string filename){m_ofForces.open(filename);};
+
+    void openPositionsFile(std::string filename){m_ofPositions.open(filename);};
+
+    void openVelocitiesFile(std::string filename){m_ofVelocities.open(filename);};
+
+    void openConnectorsFile(std::string filename){m_ofConnectors.open(filename);};
+/*	Vector* getPositions(){return m_positions;}
 
 	double* getStates(){return m_states;}
 
-	double* getForces(){return m_forces;}
+	Vector* getForces(){return m_forces;}*/
 
-	double* getConnectorForces(){return m_connectorForces;}
+    Vector* getConnectorForces(){return m_connectorForces;}
 
 	// Non-trivial functions
+    void createBlocks();
+
     void simulate();
 
     void integrate();
@@ -92,6 +119,12 @@ public:
     void copyParameters(const Params & params);
 
     void fillStatesArray(); // A very inefficient solution
+
+    void writeArrayToFile(std::ofstream & outFile, double * array, int numBlocks);
+
+    void writeArrayToFile(std::ofstream & outFile, Vector * array, int numBlocks);
+
+    void dumpData();
 
 };
 

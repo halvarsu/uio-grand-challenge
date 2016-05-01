@@ -1,5 +1,5 @@
 all:
-	g++ -g -std=c++11 main.cpp Block.cpp System.cpp Params.cpp -o main
+	g++ -g -std=c++11 main.cpp Block.cpp System.cpp Params.cpp Vector.cpp -o main
 paranoid:
 	g++ -g -std=c++11 -pedantic -Wall -Wextra -Wcast-align -Wcast-qual \
 	-Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self \
@@ -7,9 +7,9 @@ paranoid:
 	-Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow \
 	-Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 \
 	-Wswitch-default -Wundef -Werror -Wno-unused main.cpp Block.cpp System.cpp \
-	Params.cpp -o main
+	Params.cpp Vector.cpp -o main
 fast:
 	g++ -std=c++11 -Ofast -march=native -flto -fwhole-program main.cpp \
-	Block.cpp Params.cpp System.cpp -o main
+	Block.cpp Params.cpp System.cpp Vector.cpp -o main
 clean:
 	rm *o main

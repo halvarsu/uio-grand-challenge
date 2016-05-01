@@ -1,4 +1,5 @@
-numBlocks 70
+numBlocksX 70
+numBlocksY 2
 dt 1e-7
 tStop 0.01
 t 0
@@ -11,4 +12,5 @@ time_limit 0.002
 mu_s 0.4
 mu_d 0.17
 N 0.71463
-numConnectors 2 
+numConnectors 2
+pusherBlockPosition 1
