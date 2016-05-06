@@ -25,6 +25,7 @@ template <typename T> int sgn(T val) {
 class System{
 private:
     friend class Block;
+    friend class BottomBlock;
 	double m_vPusher ;         // Velocity of the pusher
 	double m_kPusher ;         // Spring coefficient of the pusher
 	double m_k       ;         // Spring coefficient of the system

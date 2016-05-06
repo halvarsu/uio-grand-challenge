@@ -60,12 +60,20 @@ Vector& Vector::operator-=(const Vector &other)
     return *this;
 }
 
+Vector& Vector::operator*=(const double d)
+{
+    this->x *= d;
+    this->y *= d;
+    return *this;
+        
+}
+
 double Vector::length() const
 {
     if(x==0.0)
-        return y;
+        return std::abs(y);
     else if(y==0.0)
-        return x;
+        return std::abs(x);
     else
         return sqrt(x*x + y*y);
 }

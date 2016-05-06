@@ -20,6 +20,7 @@ public:
     friend Vector operator/(const Vector& v1, double d);
     Vector& operator+=(const Vector &other);
     Vector& operator-=(const Vector &other);
+    Vector& operator*=(const double d);
     double length() const;
 };
 

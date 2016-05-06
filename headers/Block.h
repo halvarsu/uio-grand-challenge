@@ -3,6 +3,7 @@
 
 #include "System.h"
 #include "Vector.h"
+#include <math.h>
 
 class System;
 class Vector;
@@ -19,12 +20,10 @@ protected:
     const double m_m;                 // Mass of each block
     const double m_f_N;               // Normal force on each block
     const double m_eta;               // Dampning coefficient
-    const Vector m_connector_d;       // Distance between each connector
     const double m_time_limit;        // Time for connectors to stay in dynamic
     const double m_k_0;               // Spring coefficient for connectors
     const double m_mu_s;              // Static friction coefficient
     const double m_mu_d;              // Dynamic friction coefficient
-    const int m_numConnectors;        // Number of connectors/micro-junctions
     const double m_dt;                // Time step
     const double *const m_pT;         // Pointer to the time in system
     const double m_d;                 // Distance between each block
@@ -35,8 +34,7 @@ protected:
 public:
     const int m_row;                  // Row
     const int m_col;                  // Column
-    Vector *const m_pFrictionForce;   // Pointer to the friction force in system
-    connector* m_connectors;          // Array of connectors
+
     Vector *const m_pPosition;        // Pointer to position in system
     Vector *const m_pVelocity;        // Pointer to velocity in system
     Vector *const m_pForce;           // Pointer to total force in system
@@ -46,10 +44,11 @@ public:
     virtual ~Block();
 
     virtual void calculateForces();
-    Vector frictionForce();
     Vector viscousForce(const double eta, const Vector v0, const Vector v1);
     Vector springForce(const double k, const double d, const Vector p0, const Vector p1);
     void addNeighbour(Block& block);
+    void setNeighbourNullptr();
+    virtual double getStateOfConnector(int index){return -1;};
     Vector calculateNeighbourForces();
 };
 
@@ -69,12 +68,20 @@ public:
     //virtual void calculateForces();
     // Anders sa at toppblokkene skal faa en normalkraft
 };
+
 class BottomBlock: public Block
 {
+protected:
+    Vector *const m_pFrictionForce;   // Pointer to the friction force in system
+    connector* m_connectors;          // Array of connectors
+    const int m_numConnectors;        // Number of connectors/micro-junctions
+    const Vector m_connector_d;       // Distance between each connector
 public:
-    BottomBlock(const System& system, const int row, const int col): Block(system, row,
-    col){}
+    BottomBlock(const System& system, const int row, const int col);
+    ~BottomBlock();
     virtual void calculateForces();
+    virtual double getStateOfConnector(int index){return m_connectors[index].state;};
+    Vector frictionForce();
 };
 
 #endif /* BLOCK_H */

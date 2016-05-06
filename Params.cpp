@@ -24,6 +24,7 @@ void Params::readParameters(std::string filenameParameters)
     std::string line;
     while (getline(infileParameters, line))
     {
+        if(line=="") continue;
         // Cut the string into substrings
         std::istringstream iss(line);  // Stringstream to manipulate the stream
         std::vector<std::string> tokens; // Tokens contains the substrings

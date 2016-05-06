@@ -27,6 +27,7 @@ int main() // This function runs when you execute the program.
 
 	// Create output streams. These are closed upon the deletion of System
 	system.openPositionsFile("output/positions.bin");
+    system.openVelocitiesFile("output/velocities.bin");
 	system.openStatesFile("output/states.bin");
 	system.openForcesFile("output/forces.bin");
 	system.openConnectorsFile("output/connectorForces.bin");
