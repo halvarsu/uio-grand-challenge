@@ -39,32 +39,41 @@ class DiscreteSlider(Slider):
 
 class FrictionAnalyser:
 
-    def __init__(self, filenameParameters, filenamePositions,
-                 filenameVelocities, 
-                 filenameStates, filenameForces, filenameConnectorForces):
+    def __init__(self, filenameParameters):
         self.parameterFileName = filenameParameters
         self.readParameters()
-        self.positions = self.readData(filenamePositions, self.ny, self.nx)
-        self.velocities = self.readData(filenameVelocities, self.ny, self.nx)
-        self.states = self.readData(filenameStates, self.numConnectors*self.nx,
-                                    sizeZ=1)
-        self.forces = self.readData(filenameForces, self.ny, self.nx)
-        self.connectorForces = self.readData(filenameConnectorForces, self.numConnectors*self.nx)
+        #self.velocities = self.readData(filenameVelocities, self.ny, self.nx)
 
     def readParameters(self):
         ifile = open(self.parameterFileName, "r")
         fileContents = ifile.readlines()
         for line in fileContents:
             words = line.split()
-            exec("self.%s=%f" % (words[0], float(words[1])))
+            exec("self.%s=%g" % (words[0], float(words[1])))
+
+    def loadStates(self, filenameStates):
+        self.states = self.readData(filenameStates, self.numConnectors*self.nx,
+                                    sizeZ=1)
+        
+    def loadConnectorForces(self, filenameConnectorForces):
+        self.connectorForces = self.readData(filenameConnectorForces, self.numConnectors*self.nx)
+
+    def loadPusherForce(self, filenamePusherForce):
+        self.pusherForce = self.readData(filenamePusherForce, 1)
+
+    def loadPositions(self, filenamePositions):
+        self.positions = self.readData(filenamePositions, self.ny, self.nx)
+
+    def loadForces(self, filenameForces):
+        self.forces = self.readData(filenameForces, self.ny, self.nx)
 
     def readData(self, data_file, sizeY, sizeX=0, sizeZ=2):
         data = np.fromfile(data_file)
         if sizeX == 0 and sizeZ > 1:
-            nt = len(data) / int(sizeY*sizeZ)
+            nt = len(data) // int(sizeY*sizeZ)
             data.resize((nt, sizeY, sizeZ))
         elif sizeX == 0:
-            nt = len(data) / int(sizeY)
+            nt = len(data) // int(sizeY)
             data.resize((nt, sizeY))
         else:
             # The format is [timestep, row, column, x/y]
@@ -79,9 +88,7 @@ class FrictionAnalyser:
         colormap = mp.cm.get_cmap(args.colormap)
 
         # The driving force
-        forces = self.forces - self.forces[0]
-        driving_force = forces[:, self.pusherPosition, 0, 0]
-
+        driving_force = self.pusherForce[:, :, 1]
         fig, axes = plt.subplots(2,2)
         # Correct row, last column
         axes[0,0].plot(range(len(driving_force)), driving_force)
@@ -90,35 +97,36 @@ class FrictionAnalyser:
         axes[0][0].set_title("Driving force")
 
         # The force between the connectors and the surface
-        axes[0][1].pcolormesh(self.connectorForces[:, :, 0], cmap=colormap)
+        connectorPlot = axes[0][1].pcolormesh(self.connectorForces[:, :, 1], cmap=colormap)
         axes[0][1].set_xlabel('Connector index');
         axes[0][1].set_ylabel('Time step')
-        #axes[0][1].colorbar()
+        fig.colorbar(connectorPlot, ax=axes[0][1])
         axes[0][1].set_title("Connector forces")
 
         # The state of the connectors
-        #_cmap = plt.get_cmap('Greys', 2)  # Attempt at binary colobar
-        axes[1][0].pcolormesh(self.states, cmap=colormap)
+        _cmap = plt.get_cmap('Greys', 2)  # Attempt at binary colobar
+        statesPlot = axes[1][0].pcolormesh(self.states, cmap=_cmap)
         axes[1][0].set_xlabel('Connector index')
         axes[1][0].set_label('Time step')
         axes[1][0].set_title("States of the connectors")
-        #cax = axes[2].colorbar()#ticks=[0, 1])
-        #cax.set_ticklabels(['Static', 'Dynamic'])
+        cax = fig.colorbar(statesPlot, ax=axes[1][0], ticks=[0, 1])
+        cax.set_ticklabels(['Dynamic', 'Static'])
 
         # Plot the forces
 
         def update(timestep):
-            axes[1][1].pcolormesh(self.forces[timestep, :, :, 0], cmap=colormap)
+            forcesPlot = axes[1][1].pcolormesh(self.forces[timestep, :, :, 0], cmap=colormap)
             axes[1][1].set_xlabel('Row index')
-            axes[1][1].set_ylabel('Column step')
-            #axes[1][0].colorbar()
+            axes[1][1].set_ylabel('Column index')
+            fig.colorbar(forcesPlot, ax=axes[1][1])
             axes[1][1].set_title("Forces")
 
-        sliderax = fig.add_axes([0.2, 0.02, 0.6, 0.03],
-                                     axisbg='yellow')
-        slider = DiscreteSlider(sliderax, 'Value', 0, self.forces.shape[0]-1, valinit=1, increment=1)
-        slider.on_changed(update)
-        slider.drawon = True
+
+        #sliderax = fig.add_axes([0.2, 0.02, 0.6, 0.03],
+        #                             axisbg='yellow')
+        #slider = DiscreteSlider(sliderax, 'Value', 0, self.forces.shape[0]-1, valinit=1, increment=1)
+        #slider.on_changed(update)
+        #slider.drawon = True
         #forcemagnitude = np.sqrt(forces[:, :, :, 0]**2+forces[:, :, :, 1]**2)
         #plt.pcolormesh(self.force[:, -1, :, 0], cmap=colormap)
 
@@ -126,11 +134,19 @@ class FrictionAnalyser:
         plt.tight_layout()
         plt.show()
 
+    def animate(self, colormap):
+        from animateforce import Blocks
+        colormap = mp.cm.get_cmap(colormap)
+
+        B = Blocks(self.forces, colormap)
+        B.animate()
+
 
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-cmap", "--colormap", help="Set the colormap",
                         choices=mp.cm.cmap_d, default='viridis')
+    parser.add_argument("-a", "--animate", action="store_true", default=False)
     return parser.parse_args()
 
 
@@ -141,10 +157,15 @@ if __name__ == "__main__":
     filenameStates = "output/states.bin"
     filenameForces = "output/forces.bin"
     filenameConnectorForces = "output/connectorForces.bin"
+    filenamePusherForce = "output/pusherForce.bin"
 
     args = get_args()
-    analyser = FrictionAnalyser(filenameParameters, filenamePositions,
-                                filenameVelocities,
-                                filenameStates, filenameForces,
-                                filenameConnectorForces)
-    analyser.plot(args, "")
+    analyser = FrictionAnalyser(filenameParameters)
+    if args.animate:
+        analyser.loadForces(filenameForces)
+        analyser.animate(args.colormap)
+    else:
+        analyser.loadStates(filenameStates)
+        analyser.loadConnectorForces(filenameConnectorForces)
+        analyser.loadPusherForce(filenamePusherForce)
+        analyser.plot(args, "")

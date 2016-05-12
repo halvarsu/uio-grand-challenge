@@ -23,7 +23,11 @@ Block::Block(const System& system, const int row, const int col):
     m_pForce(&system.m_forces[row*system.m_numBlocksX+col]),
     m_pT(&system.m_t),
     m_row(row), m_col(col)
-{}
+{
+    for (int i = 0; i < 4; i++) {
+        m_pNeighbours[i] = nullptr;
+    }
+}
 
 /*
   Copy constructor
@@ -65,9 +69,14 @@ Vector Block::springForce(const double k, const double d, const Vector p0, const
 {
     Vector spring = p1 - p0;
     double distance = spring.length();
-    // Errors of magnitude e-19 gets blown up to e-13 or e-10
     double forceTotal = (distance > 0) ? k*(distance-d)/distance: k*(distance-d);
     return forceTotal * spring;
+}
+
+double Block::springForce(const double k, const double d, const double p0, const double p1)
+{
+    double force = k*(p1 - p0 - d);
+    return force;
 }
 
 Vector Block::viscousForce(const double eta, const Vector v0, const Vector v1)
@@ -80,14 +89,22 @@ Vector Block::viscousForce(const double eta, const Vector v0, const Vector v1)
  */
 void Block::addNeighbour(Block &block)
 {
+    if(m_neighboursCounter >= 4)
+        std::cerr << "Can not add any more neighbours" << std::endl;
+    else{
     m_pNeighbours[m_neighboursCounter] = &block;
     ++m_neighboursCounter;
+    }
 }
 
 void Block::setNeighbourNullptr()
 {
-    m_pNeighbours[m_neighboursCounter] = nullptr;
-    ++m_neighboursCounter;
+    if(m_neighboursCounter >= 4)
+        std::cerr << "Can not add any more neighbours" << std::endl;
+    else{
+        m_pNeighbours[m_neighboursCounter] = nullptr;
+        ++m_neighboursCounter;
+    }
 }
 
 Vector Block::calculateNeighbourForces(){
@@ -120,26 +137,22 @@ Vector Block::calculateNeighbourForces(){
 void Block::calculateForces()
 {
     *m_pForce += calculateNeighbourForces();
-    /*
-    *m_pForce = springForce(m_k, m_d, *m_pPosition, *(m_pPosition+1))
-        -springForce(m_k, m_d, *(m_pPosition-1), *m_pPosition)
-        +viscousForce(m_eta, *m_pVelocity, *(m_pVelocity+1))
-        -viscousForce(m_eta, *(m_pVelocity-1), *m_pVelocity)
-        +connectorForce();
-    */
 }
+
+PusherBlock::PusherBlock(const System& system, const int row, const int col,
+                         Vector* pusherForce):
+    m_pPusherForce(pusherForce),
+    Block(system, row, col)
+{}
 
 void PusherBlock::calculateForces()
 {
+    //  
     Vector pusherPosition = m_vPusher * (*m_pT);
+    Vector pusherForce = springForce(m_kPusher, 0, *m_pPosition, pusherPosition);
     *m_pForce += calculateNeighbourForces()
-              + springForce(m_kPusher, 0, *m_pPosition, pusherPosition);
-    /*
-    *m_pForce = springForce(m_k, m_d, *m_pPosition, *(m_pPosition+1))
-        + springForce(m_kPusher, 0, *m_pPosition, pusherPosition)
-        + viscousForce(m_eta, *m_pVelocity, *(m_pVelocity+1))
-        + connectorForce();
-    */
+              + pusherForce;
+    *m_pPusherForce = pusherForce;
 }
 
 void BottomBlock::calculateForces()

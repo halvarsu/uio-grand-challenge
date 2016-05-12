@@ -46,6 +46,7 @@ public:
     virtual void calculateForces();
     Vector viscousForce(const double eta, const Vector v0, const Vector v1);
     Vector springForce(const double k, const double d, const Vector p0, const Vector p1);
+    double springForce(const double k, const double d, const double p0, const double p1);
     void addNeighbour(Block& block);
     void setNeighbourNullptr();
     virtual double getStateOfConnector(int index){return -1;};
@@ -54,9 +55,11 @@ public:
 
 class PusherBlock: public Block
 {
+protected:
+    // TODO: Make const pointer
+    Vector* m_pPusherForce;
 public:
-    PusherBlock(const System& system, const int row, const int col): Block(system,
-    row, col){}
+    PusherBlock(const System& system, const int row, const int column, Vector* pusherForce);
     virtual void calculateForces();
 };
 

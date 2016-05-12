@@ -14,9 +14,9 @@ class FrictionAnalyser:
                  filenameStates, filenameForces, filenameConnectorForces):
         self.parameterFileName = filenameParameters
         self.readParameters()
-        self.positions = self.readData(filenamePositions, self.nx)
+        self.positions = self.readData(filenamePositions, self.nx*self.ny)
         self.states = self.readData(filenameStates, self.numConnectors*self.nx)
-        self.forces = self.readData(filenameForces, self.nx)
+        self.forces = self.readData(filenameForces, self.nx*self.ny)
         self.connectorForces = self.readData(filenameConnectorForces, self.numConnectors*self.nx)
 
     def readParameters(self):
@@ -132,7 +132,7 @@ class FrictionAnalyser:
         # The force between the connectors and the surface
         plt.subplot(222)
         plt.pcolormesh(self.connectorForces, cmap=colormap)
-        plt.xlabel('Block index'); plt.ylabel('Time step')
+        plt.xlabel('Connector index'); plt.ylabel('Time step')
         plt.colorbar()
         plt.title("Connector forces")
 

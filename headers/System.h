@@ -15,6 +15,7 @@
 #include "Block.h"
 
 class Block;
+enum class blockType;
 struct connector;
 class Params;
 class Vector;
@@ -41,11 +42,12 @@ private:
     double m_N       ;         // Normal force on the system
     double m_connector_d;      // Length between each connector on a block
 	double m_time_limit;       // Time for connector to by in dynamic state
-	double* m_states  ;        // States to be dumped to file
+	double* m_states  ;           // States to be dumped to file
 	Vector* m_positions;       // Position of each block
 	Vector* m_velocities;      // Velocity of each block
 	Vector* m_forces;          // Total froce on each block
 	Vector* m_connectorForces; // Force from each connector
+    Vector* m_pusherForce;
     const int m_pusherBlockPosition; // Index of the block pushing
     /*
       NOTE: A multidimensional array is not light weight. A quicker method is
@@ -65,7 +67,7 @@ public:
     std::ofstream m_ofVelocities;
     std::ofstream m_ofForces;
     std::ofstream m_ofConnectors;
-
+    std::ofstream m_ofPusherForce;
 
 	friend std::ostream& operator <<(std::ostream& os, System const& system)
 		{
@@ -93,37 +95,24 @@ public:
 
 	~System();
     // Trivial functions
-    void openStatesFile(std::string filename){m_ofStates.open(filename);};
-
-    void openForcesFile(std::string filename){m_ofForces.open(filename);};
-
-    void openPositionsFile(std::string filename){m_ofPositions.open(filename);};
-
-    void openVelocitiesFile(std::string filename){m_ofVelocities.open(filename);};
-
-    void openConnectorsFile(std::string filename){m_ofConnectors.open(filename);};
-/*	Vector* getPositions(){return m_positions;}
-
-	double* getStates(){return m_states;}
-
-	Vector* getForces(){return m_forces;}*/
-
-    Vector* getConnectorForces(){return m_connectorForces;}
 
 	// Non-trivial functions
-    void createBlocks();
+    void linkNeighbours();
+
+    void createGeometry(const std::vector< std::vector<blockType> >& geometry);
 
     void simulate();
 
     void integrate();
 
-    void copyParameters(const Params & params);
-
     void fillStatesArray(); // A very inefficient solution
 
     void writeArrayToFile(std::ofstream & outFile, double * array, int numBlocks);
 
-    void writeArrayToFile(std::ofstream & outFile, Vector * array, int numBlocks);
+    void writeArrayToFile(std::ofstream & outFile, Vector * array, int
+    numBlocks);
+
+    int openFiles(const Params& params);
 
     void dumpData();
 

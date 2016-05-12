@@ -26,11 +26,7 @@ int main() // This function runs when you execute the program.
 	cout << "The write frequency is " << writeFrequency << endl;
 
 	// Create output streams. These are closed upon the deletion of System
-	system.openPositionsFile("output/positions.bin");
-    system.openVelocitiesFile("output/velocities.bin");
-	system.openStatesFile("output/states.bin");
-	system.openForcesFile("output/forces.bin");
-	system.openConnectorsFile("output/connectorForces.bin");
+
 
 	clock_t start, end;
 	start = clock();
@@ -43,8 +39,12 @@ int main() // This function runs when you execute the program.
 		system.simulate();
 
 		// modulo operation to check whether to write output to file on this timestep
-		if ( (counter%writeFrequency) == 0)
+		if ( (counter%writeFrequency) == 0){
             system.dumpData();
+            std::cout << "\r" << system.m_t/system.m_tStop * 100 << "% completed";
+            //std::cout << std::string(X, '|');
+            std::cout.flush();            
+        }
 
 		system.m_t += system.m_dt;
 		counter ++;
