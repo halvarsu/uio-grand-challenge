@@ -79,6 +79,7 @@ protected:
     connector* m_connectors;          // Array of connectors
     const int m_numConnectors;        // Number of connectors/micro-junctions
     const double m_connector_d;       // Distance between each connector
+    const double m_dynamicLength;
 public:
     BottomBlock(const System& system, const int row, const int col);
     ~BottomBlock();
