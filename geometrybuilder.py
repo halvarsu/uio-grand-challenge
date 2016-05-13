@@ -334,5 +334,5 @@ class Geometry(object):
         np.savetxt(filename, symbols, delimiter='', fmt='%s')
         
 if __name__ == '__main__':
-    geo = Geometry(31, 57)
+    geo = Geometry(10, 10)
     plt.show()

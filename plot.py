@@ -56,7 +56,8 @@ class FrictionAnalyser:
                                     sizeZ=1)
         
     def loadConnectorForces(self, filenameConnectorForces):
-        self.connectorForces = self.readData(filenameConnectorForces, self.numConnectors*self.nx)
+        self.connectorForces = self.readData(filenameConnectorForces,
+                                             self.numConnectors*self.nx, sizeZ=1)
 
     def loadPusherForce(self, filenamePusherForce):
         self.pusherForce = self.readData(filenamePusherForce, 1)
@@ -88,7 +89,7 @@ class FrictionAnalyser:
         colormap = mp.cm.get_cmap(args.colormap)
 
         # The driving force
-        driving_force = self.pusherForce[:, :, 1]
+        driving_force = self.pusherForce[:, :, 0]
         fig, axes = plt.subplots(2,2)
         # Correct row, last column
         axes[0,0].plot(range(len(driving_force)), driving_force)
@@ -97,7 +98,7 @@ class FrictionAnalyser:
         axes[0][0].set_title("Driving force")
 
         # The force between the connectors and the surface
-        connectorPlot = axes[0][1].pcolormesh(self.connectorForces[:, :, 1], cmap=colormap)
+        connectorPlot = axes[0][1].pcolormesh(self.connectorForces, cmap=colormap)
         axes[0][1].set_xlabel('Connector index');
         axes[0][1].set_ylabel('Time step')
         fig.colorbar(connectorPlot, ax=axes[0][1])
@@ -105,12 +106,12 @@ class FrictionAnalyser:
 
         # The state of the connectors
         _cmap = plt.get_cmap('Greys', 2)  # Attempt at binary colobar
-        statesPlot = axes[1][0].pcolormesh(self.states, cmap=_cmap)
+        statesPlot = axes[1][0].pcolormesh(self.states, cmap=colormap)
         axes[1][0].set_xlabel('Connector index')
         axes[1][0].set_label('Time step')
         axes[1][0].set_title("States of the connectors")
-        cax = fig.colorbar(statesPlot, ax=axes[1][0], ticks=[0, 1])
-        cax.set_ticklabels(['Dynamic', 'Static'])
+        cax = fig.colorbar(statesPlot, ax=axes[1][0])#, ticks=[0, 1])
+        #cax.set_ticklabels(['Dynamic', 'Static'])
 
         # Plot the forces
 

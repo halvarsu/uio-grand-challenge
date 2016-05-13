@@ -7,6 +7,7 @@
 #include <cmath>
 #include <time.h>
 #include <vector>
+#include <iomanip>
 #include "headers/System.h"
 #include "headers/Block.h"
 #include "headers/Params.h"
@@ -41,7 +42,8 @@ int main() // This function runs when you execute the program.
 		// modulo operation to check whether to write output to file on this timestep
 		if ( (counter%writeFrequency) == 0){
             system.dumpData();
-            std::cout << "\r" << system.m_t/system.m_tStop * 100 << "% completed";
+            std::cout << "\r" << system.m_t/system.m_tStop * 100
+                      << "% completed";
             //std::cout << std::string(X, '|');
             std::cout.flush();            
         }
@@ -56,7 +58,7 @@ int main() // This function runs when you execute the program.
 	outFileParameters << system;
 	outFileParameters.close();
 
-	cout << "Ran " << counter << " integration steps for "<<system.m_numBlocksY
+	cout << "\nRan " << counter << " integration steps for "<<system.m_numBlocksY
          <<"x" << system.m_numBlocksX << " blocks with " << system.m_numConnectors << " micro-junctions each in "
          << ((double)end - (double)start)/CLOCKS_PER_SEC << " seconds" << endl;
 	return 0;

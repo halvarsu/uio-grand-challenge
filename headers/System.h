@@ -42,17 +42,13 @@ private:
     double m_N       ;         // Normal force on the system
     double m_connector_d;      // Length between each connector on a block
 	double m_time_limit;       // Time for connector to by in dynamic state
-	double* m_states  ;           // States to be dumped to file
+	double* m_states  ;        // States to be dumped to file
+	Vector* m_connectorForces; // Force from each connector
 	Vector* m_positions;       // Position of each block
 	Vector* m_velocities;      // Velocity of each block
 	Vector* m_forces;          // Total froce on each block
-	Vector* m_connectorForces; // Force from each connector
     Vector* m_pusherForce;
     const int m_pusherBlockPosition; // Index of the block pushing
-    /*
-      NOTE: A multidimensional array is not light weight. A quicker method is
-      allocating a large block of memory, double* array = new double[sizeX*sizeY]
-     */
 public:
 	const int m_numBlocksX  ;  // Number of blocks in the x-direction
     const int m_numBlocksY  ;  // Number of blocks in the y-direction

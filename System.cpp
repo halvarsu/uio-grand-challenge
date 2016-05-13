@@ -128,15 +128,15 @@ void System::linkNeighbours()
 {
     // Link the neighbours
     /*
-      TL = Top Left, L = Left, BL = Bottom Left, B = Bottom, @ = Block
-      .....TL
-      ..../.
+      TL = Top Left, L = Left, BL = Bottom Left, T = Top, @ = Block
+      ...T.TL
+      ...|/.
       ...@-L
-      ...|\.
-      ...B.BL
+      ....\.
+      .....BL
 
       Format of the array:
-      [TL BL L B]
+      [TL BL L T]
     */
     for (int y = 0; y < m_numBlocksY; y++){
         for (int x = 0; x < m_numBlocksX; x++){
@@ -162,7 +162,7 @@ void System::linkNeighbours()
                 else
                     m_blocks[y][x]->setNeighbourNullptr();
 
-                if(y < m_numBlocksY-1){ // Bottom
+                if(y < m_numBlocksY-1){ // Top
                     if(m_blocks[y+1][x])
                         m_blocks[y][x]->addNeighbour(*m_blocks[y+1][x]);
                 }
@@ -209,9 +209,9 @@ void System::fillStatesArray()
 {
     for (int x = 0; x < m_numBlocksX; x++)
     {
-        for (int y = 0; y < m_numConnectors; y++) {
+        for (int i = 0; i < m_numConnectors; i++) {
             if(m_blocks[0][x]) // Check for nullptr
-                m_states[x*m_numConnectors+y] = m_blocks[0][x]->getStateOfConnector(y);
+                m_states[x*m_numConnectors+i] = m_blocks[0][x]->getStateOfConnector(i);
         }
     }
 }

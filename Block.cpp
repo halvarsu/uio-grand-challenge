@@ -75,8 +75,7 @@ Vector Block::springForce(const double k, const double d, const Vector p0, const
 
 double Block::springForce(const double k, const double d, const double p0, const double p1)
 {
-    double force = k*(p1 - p0 - d);
-    return force;
+    return k*(p1 - p0 - d);
 }
 
 Vector Block::viscousForce(const double eta, const Vector v0, const Vector v1)
@@ -148,7 +147,7 @@ PusherBlock::PusherBlock(const System& system, const int row, const int col,
 void PusherBlock::calculateForces()
 {
     //  
-    Vector pusherPosition = m_vPusher * (*m_pT);
+    Vector pusherPosition(m_vPusher.x * (*m_pT), m_pPosition->y);
     Vector pusherForce = springForce(m_kPusher, 0, *m_pPosition, pusherPosition);
     *m_pForce += calculateNeighbourForces()
               + pusherForce;
@@ -174,8 +173,7 @@ BottomBlock::BottomBlock(const System& system, const int row, const int col):
     // Create the connectors
     m_connectors = new connector[m_numConnectors];
     for (int j = 0; j < m_numConnectors; j++) {
-        //m_connectors[j].state = STATIC;
-        m_connectors[j].pos0 = Vector(m_d*col + m_connector_d.x*j, 0);
+        m_connectors[j].pos0 = Vector(m_d*col + m_connector_d.x*j,0);
     }
 }
 
@@ -215,4 +213,32 @@ Vector BottomBlock::frictionForce()
     }
     return friction;
 }
+/*Vector BottomBlock::frictionForce()
+{
+    Vector friction;
+    for(int i = 0; i < m_numConnectors; i++)
+    {
+        if (m_connectors[i].state) {
+            *(m_pFrictionForce+i) = -springForce(m_k_0, 0, m_connectors[i].pos0, m_pPosition->x+m_connector_d*i);
+            if (std::abs(m_pFrictionForce[i]) > m_mu_s * m_f_N) {
+                m_connectors[i].state = DYNAMIC;     // Change state
+                m_connectors[i].timer = 0;           // Start timer
+            }
+        }
+        // If the string is subsequently not attached
+        if (!m_connectors[i].state) {
+            *(m_pFrictionForce+i) = -m_mu_d * m_f_N * std::copysign(1.0, m_pVelocity->x);
+            m_connectors[i].timer += m_dt;
 
+            // Check the timer
+            if (m_connectors[i].timer > m_time_limit) {
+                m_connectors[i].state = STATIC;
+                m_connectors[i].pos0 = m_pPosition->x+m_connector_d*i;
+            }
+        }
+        friction += *(m_pFrictionForce+i);
+    }
+    return friction;
+}
+
+*/

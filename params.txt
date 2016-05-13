@@ -3,7 +3,7 @@ numBlocksY 31 Has no effect
 dt 1e-7
 tStop 0.01
 t 0
-vPusher 4e-4
+vPusher 0 4e-4
 kPusher 4e6
 k 2.3e6
 L 0.14
@@ -11,13 +11,13 @@ M 0.0756
 time_limit 0.002
 mu_s 0.4
 mu_d 0.57
-N 10
-numConnectors 10
+N 1
+numConnectors 1
 pusherBlockPosition 2 Has no effect
-filenameGeometry geometryTromborg.txt
+filenameGeometry geoTest.txt
 filenamePositions output/positions.bin
 filenameVelocities output/velocities.bin
 filenameStates output/states.bin
 filenameForces output/forces.bin
 filenameConnectors output/connectorForces.bin
-filenamePusherForce outout/pusherForce.bin
+filenamePusherForce output/pusherForce.bin

@@ -11,7 +11,7 @@ class Blocks():
         self.data = data
         self.fig, self.ax = plt.subplots()
         self.colormap = colormap
-        self.norm = SymLogNorm(linthresh=0.3,linscale=0.3, vmin=-1e-3,vmax=1e-3)
+        self.norm = SymLogNorm(linthresh=0.3,linscale=0.3, vmin=-1e-8,vmax=1e-8)
         self.plot =  self.ax.pcolormesh(self.data[0,:,:,0], norm=self.norm,
                                        cmap=self.colormap)
         self.fig.colorbar(self.plot, ax=self.ax, extend='both')
