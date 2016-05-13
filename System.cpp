@@ -1,11 +1,7 @@
 #include "headers/System.h"
 #include <typeinfo>
 
-System::System(const Params & params): m_numBlocksX(params.m_numBlocksX),
-                                       m_numBlocksY(params.m_numBlocksY),
-                                       m_numConnectors(params.m_numConnectors),
-                                       m_tStop(params.m_tStop),
-                                       m_pusherBlockPosition(params.m_pusherBlockPosition),
+System::System(const Params & params): 
                                        m_vPusher(params.m_vPusher),
                                        m_kPusher(params.m_kPusher),
                                        m_k(params.m_k),
@@ -15,16 +11,22 @@ System::System(const Params & params): m_numBlocksX(params.m_numBlocksX),
                                        m_mu_d(params.m_mu_d),
                                        m_N(params.m_N),
                                        m_time_limit(params.m_time_limit),
+                                       m_pusherBlockPosition(params.m_pusherBlockPosition),
+                                       m_d(m_L/(params.m_numBlocksX-1)),
+                                       m_m(m_M/params.m_numBlocksX),
+                                       m_eta(sqrt(0.1)*sqrt(m_k*m_m)),
+                                       m_f_N(m_N/(params.m_numBlocksX*params.m_numBlocksY)),
+                                       m_k_0(sqrt(39.2e9*m_f_N)),
+                                       m_connector_d(m_d/params.m_numConnectors),
+                                       m_numBlocksX(params.m_numBlocksX),
+                                       m_numBlocksY(params.m_numBlocksY),
+                                       m_numConnectors(params.m_numConnectors),
+                                       m_t(0.0),
+                                       m_tStop(params.m_tStop),
                                        m_dt(params.m_dt)
-
 {
     // Compute more coefficients
-	m_d				   = m_L/(m_numBlocksX-1);
-	m_m				   = m_M/m_numBlocksX;
-	m_eta              = sqrt(0.1)*sqrt(m_k*m_m);
-    m_f_N              = m_N/(m_numBlocksX*m_numBlocksY);
-	m_k_0              = sqrt(39.2e9*m_f_N);
-    m_connector_d      = m_d/m_numConnectors;
+
 
     // Open the files to be written
     openFiles(params);
@@ -37,9 +39,9 @@ System::System(const Params & params): m_numBlocksX(params.m_numBlocksX),
     m_states		   = new double[m_numBlocksX*m_numConnectors];
     m_pusherForce      = new Vector[1];
     // Initilize the arrays
-    for (int y = 0; y < m_numBlocksY; y++) {
+    for (unsigned int y = 0; y < m_numBlocksY; y++) {
         // Initialize the position
-        for (int x = 0; x < m_numBlocksX; x++) {
+        for (unsigned int x = 0; x < m_numBlocksX; x++) {
             m_positions[y*m_numBlocksX+x].x = m_d*x;
             m_positions[y*m_numBlocksX+x].y = m_d*y;
         }
@@ -75,6 +77,7 @@ int System::openFiles(const Params& params)
     m_ofVelocities.open(params.m_filenameVelocities);
     m_ofConnectors.open(params.m_filenameConnectors);
     m_ofPusherForce.open(params.m_filenamePusherForce);
+    return 0;
 }
 
 
@@ -85,11 +88,11 @@ void System::createGeometry(const std::vector<std::vector<blockType> >& geometry
     */
     // Construct the block structure
     m_blocks.resize(m_numBlocksY);
-    for (int y = 0; y < m_numBlocksY; y++) {
+    for (unsigned int y = 0; y < m_numBlocksY; y++) {
         m_blocks[y].resize(m_numBlocksX);
     }
-    for (int y = 0; y < geometry.size(); y++){
-        for (int x = 0; x < geometry[y].size(); x++){
+    for (unsigned int y = 0; y < geometry.size(); y++){
+        for (unsigned int x = 0; x < geometry[y].size(); x++){
             switch (geometry[y][x]) {
             case blockType::bBlock: {
                 m_blocks[y][x] = new Block(*this, y, x);
@@ -111,6 +114,9 @@ void System::createGeometry(const std::vector<std::vector<blockType> >& geometry
                 m_blocks[y][x] = nullptr;
                 break;
             }
+            default:
+                std::cerr << "Unknown geometry type at x, y: "
+                          << x <<", " << y << std::endl;
             }
             
         }
@@ -138,8 +144,8 @@ void System::linkNeighbours()
       Format of the array:
       [TR BR R T]
     */
-    for (int y = 0; y < m_numBlocksY; y++){
-        for (int x = 0; x < m_numBlocksX; x++){
+    for (unsigned int y = 0; y < m_numBlocksY; y++){
+        for (unsigned int x = 0; x < m_numBlocksX; x++){
             if(m_blocks[y][x]){
                 if(y > 0 && x < m_numBlocksX-1){ // Top right
                     if(m_blocks[y-1][x+1]) // Check for nullptr
@@ -178,13 +184,13 @@ void System::simulate()
 {
 
     // Reset and recalculate the forces
-    for (int y = 0; y < m_numBlocksY; y++) {
-        for (int x = 0; x < m_numBlocksX; x++) {
+    for (unsigned int y = 0; y < m_numBlocksY; y++) {
+        for (unsigned int x = 0; x < m_numBlocksX; x++) {
             m_forces[y*m_numBlocksX+x] = Vector(0,0);
         }
     }
-    for (int y = 0; y < m_numBlocksY; y++) {
-        for (int x = 0; x < m_numBlocksX; x++) {
+    for (unsigned int y = 0; y < m_numBlocksY; y++) {
+        for (unsigned int x = 0; x < m_numBlocksX; x++) {
             if(m_blocks[y][x]) // Deleted blocks are nullptr
                 m_blocks[y][x]->calculateForces();
         }
@@ -195,8 +201,8 @@ void System::simulate()
        r_(n+1) = r_n + v_(n+1/2)*delta_t
        v_(n+1) = v_(n+1/2) + f_(n+1)*delta_t / (2*m)
      */
-    for (int y = 0; y < m_numBlocksY; y++) {
-        for (int x = 0; x < m_numBlocksX; x++) {
+    for (unsigned int y = 0; y < m_numBlocksY; y++) {
+        for (unsigned int x = 0; x < m_numBlocksX; x++) {
             Vector vel_halfstep = m_velocities[y*m_numBlocksX+x] + m_forces[y*m_numBlocksX+x]*m_dt/(2*m_m);
             m_positions[y*m_numBlocksX+x] += vel_halfstep*m_dt;
             m_velocities[y*m_numBlocksX+x] = vel_halfstep + m_forces[y*m_numBlocksX+x]*m_dt/(2*m_m);
@@ -207,9 +213,9 @@ void System::simulate()
 
 void System::fillStatesArray()
 {
-    for (int x = 0; x < m_numBlocksX; x++)
+    for (unsigned int x = 0; x < m_numBlocksX; x++)
     {
-        for (int i = 0; i < m_numConnectors; i++) {
+        for (unsigned int i = 0; i < m_numConnectors; i++) {
             if(m_blocks[0][x]) // Check for nullptr
                 m_states[x*m_numConnectors+i] = m_blocks[0][x]->getStateOfConnector(i);
         }
@@ -227,13 +233,15 @@ void System::dumpData()
     writeArrayToFile(m_ofPusherForce, m_pusherForce, 1);
 }
 
-void System::writeArrayToFile(std::ofstream & outFile, double * array, int numBlocks)
+void System::writeArrayToFile(std::ofstream & outFile,  double * array,
+const unsigned int numBlocks)
 {
     if(array)
         outFile.write(reinterpret_cast<char*>(array), numBlocks*sizeof(array[0]));
 }
 
-void System::writeArrayToFile(std::ofstream & outFile, Vector * array, int numBlocks)
+void System::writeArrayToFile(std::ofstream & outFile, Vector * array,
+const unsigned int numBlocks)
 {
     if(array)
         outFile.write(reinterpret_cast<char*>(array), numBlocks*sizeof(Vector));

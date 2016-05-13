@@ -181,6 +181,7 @@ int Params::checkParameters()
     if(m_filenameVelocities == S_DEFAULT){
         std::cerr << "m_filenameVelocities is not set" << std::endl;
     }
+    return 0;
 }
 
 /*
@@ -224,7 +225,7 @@ int Params::loadGeometry(std::string filenameGeometry)
         }
     }
     // check for equal length
-    int row_length = m_geometry[0].size();
+    const unsigned int row_length = m_geometry[0].size();
     for (auto row: m_geometry){
         if (row.size() != row_length) {
             std::cerr << "Unequal length" << std::endl;

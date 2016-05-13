@@ -10,7 +10,7 @@ L 0.14
 M 0.0756
 time_limit 0.002
 mu_s 0.4
-mu_d 0.57
+mu_d 0.17
 N 1
 numConnectors 1
 pusherBlockPosition 2 Has no effect

@@ -2,7 +2,7 @@
 #define PARAMS_H
 
 #define F_DEFAULT 0.12131415
-#define I_DEFAULT -1
+#define I_DEFAULT 129491
 #define S_DEFAULT ""
 #include "System.h"
 #include <iostream>
@@ -32,20 +32,20 @@ public:
 	double m_mu_d    ;
     double m_N       ;
 	double m_time_limit; // Crap, misaligned
-	int m_numBlocksX ;
-    int m_numBlocksY ; 
+	unsigned int m_numBlocksX ;
+    unsigned int m_numBlocksY ; 
     double m_tStop   ;
     double m_dt      ;
-    int m_numConnectors;
-    int m_pusherBlockPosition;
+    unsigned int m_numConnectors;
+    unsigned int m_pusherBlockPosition;
     std::vector< std::vector<blockType> > m_geometry;
     std::string m_filenameGeometry;
-    std::string m_filenamePositions;
-    std::string m_filenameVelocities;
-    std::string m_filenameStates;
-    std::string m_filenameForces;
     std::string m_filenameConnectors;
+    std::string m_filenameForces;
+    std::string m_filenamePositions;
     std::string m_filenamePusherForce;
+    std::string m_filenameStates;
+    std::string m_filenameVelocities;
 
     Params(std::string filenameParameters);
 

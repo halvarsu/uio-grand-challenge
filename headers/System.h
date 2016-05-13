@@ -27,32 +27,32 @@ class System{
 private:
     friend class Block;
     friend class BottomBlock;
-	double m_vPusher ;         // Velocity of the pusher
-	double m_kPusher ;         // Spring coefficient of the pusher
-	double m_k       ;         // Spring coefficient of the system
-	double m_L       ;         // Physical length of the block chain
-	double m_d       ;         // Length of a block
-	double m_M       ;         // Mass of the system
-	double m_m       ;         // Mass the each block
-	double m_eta     ;         // Damping coefficient
-	double m_mu_s    ;         // Static friction coefficient
-	double m_mu_d    ;         // Dynamic friction coefficient
-	double m_k_0     ;         // Spring coefficient of connectors
-	double m_f_N     ;         // Normal force on each block
-    double m_N       ;         // Normal force on the system
-    double m_connector_d;      // Length between each connector on a block
-	double m_time_limit;       // Time for connector to by in dynamic state
+	const double m_vPusher ;         // Velocity of the pusher
+	const double m_kPusher ;         // Spring coefficient of the pusher
+	const double m_k       ;         // Spring coefficient of the system
+	const double m_L       ;         // Physical length of the block chain
+	const double m_M       ;         // Mass of the system
+	const double m_mu_s    ;         // Static friction coefficient
+	const double m_mu_d    ;         // Dynamic friction coefficient
+    const double m_N       ;         // Normal force on the system
+	const double m_time_limit;       // Time for connector to by in dynamic state
+    const unsigned int m_pusherBlockPosition; // Index of the block pushing
+	const double m_d       ;         // Length of a block
+	const double m_m       ;         // Mass the each block
+	const double m_eta     ;         // Damping coefficient
+	const double m_f_N     ;         // Normal force on each block
+	const double m_k_0     ;         // Spring coefficient of connectors
+    const double m_connector_d;      // Length between each connector on a block
 	double* m_states  ;        // States to be dumped to file
 	double* m_connectorForces; // Force from each connector
 	Vector* m_positions;       // Position of each block
 	Vector* m_velocities;      // Velocity of each block
 	Vector* m_forces;          // Total froce on each block
     Vector* m_pusherForce;
-    const int m_pusherBlockPosition; // Index of the block pushing
 public:
-	const int m_numBlocksX  ;  // Number of blocks in the x-direction
-    const int m_numBlocksY  ;  // Number of blocks in the y-direction
-    const int m_numConnectors; // Number of connectors
+	const unsigned int m_numBlocksX  ;  // Number of blocks in the x-direction
+    const unsigned int m_numBlocksY  ;  // Number of blocks in the y-direction
+    const unsigned int m_numConnectors; // Number of connectors
 	double m_t       ;
     const double m_tStop   ;
     double m_dt      ;
@@ -103,10 +103,11 @@ public:
 
     void fillStatesArray(); // A very inefficient solution
 
-    void writeArrayToFile(std::ofstream & outFile, double * array, int numBlocks);
+    void writeArrayToFile(std::ofstream & outFile,  double * array, const
+    unsigned int numBlocks);
 
-    void writeArrayToFile(std::ofstream & outFile, Vector * array, int
-    numBlocks);
+    void writeArrayToFile(std::ofstream & outFile,  Vector * array, const
+    unsigned int numBlocks);
 
     int openFiles(const Params& params);
 

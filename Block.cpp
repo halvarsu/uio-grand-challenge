@@ -5,7 +5,7 @@
   Constructor for Block. Initialize all of the variables from System and
   construct the array of connecturs.
  */
-Block::Block(const System& system, const int row, const int col):
+Block::Block(const System& system, const unsigned int row, const unsigned int col):
     m_k(system.m_k),
     m_m(system.m_m),
     m_f_N(system.m_f_N),
@@ -18,11 +18,11 @@ Block::Block(const System& system, const int row, const int col):
     m_d(system.m_d),
     m_vPusher(Vector(system.m_vPusher, 0)),
     m_kPusher(system.m_kPusher),
+    m_pT(&system.m_t),
+    m_row(row), m_col(col),
     m_pPosition(&system.m_positions[row*system.m_numBlocksX+col]),
     m_pVelocity(&system.m_velocities[row*system.m_numBlocksX+col]),
-    m_pForce(&system.m_forces[row*system.m_numBlocksX+col]),
-    m_pT(&system.m_t),
-    m_row(row), m_col(col)
+    m_pForce(&system.m_forces[row*system.m_numBlocksX+col])
 {
     for (int i = 0; i < 4; i++) {
         m_pNeighbours[i] = nullptr;
@@ -45,14 +45,14 @@ Block::Block(const Block &obj):
     m_d(obj.m_d),
     m_vPusher(obj.m_vPusher),
     m_kPusher(obj.m_kPusher),
+    m_pT(obj.m_pT),
+    m_neighboursCounter(0),
+    m_row(obj.m_row), m_col(obj.m_col),
     m_pPosition(obj.m_pPosition),
     m_pVelocity(obj.m_pVelocity),
-    m_pForce(obj.m_pForce),
-    m_pT(obj.m_pT),
-    m_row(obj.m_row), m_col(obj.m_col),
-    m_neighboursCounter(0)
+    m_pForce(obj.m_pForce)
 {
-    std::cout<< "Yay!" << std::endl;
+    std::cerr << "This should never happen" << std::endl;
 }
 /*
 Deconstructor for Block. Deallocate all pointers and array
@@ -138,10 +138,10 @@ void Block::calculateForces()
     *m_pForce += calculateNeighbourForces();
 }
 
-PusherBlock::PusherBlock(const System& system, const int row, const int col,
+PusherBlock::PusherBlock(const System& system, const unsigned int row, const unsigned int col,
                          Vector* pusherForce):
-    m_pPusherForce(pusherForce),
-    Block(system, row, col)
+    Block(system, row, col),
+    m_pPusherForce(pusherForce)
 {}
 
 void PusherBlock::calculateForces()
@@ -164,18 +164,22 @@ void BottomBlock::calculateForces()
   Constructor for BottomBlock. Initialize all of the variables from System and
   construct the array of connectors.
 */
-BottomBlock::BottomBlock(const System& system, const int row, const int col):
-    m_connector_d(system.m_connector_d),
-    m_numConnectors(system.m_numConnectors),
-    m_pFrictionForce(&system.m_connectorForces[col*system.m_numConnectors]),
+BottomBlock::BottomBlock(const System& system, const unsigned int row, const
+  unsigned int col):
     Block(system, row, col),
+    m_pFrictionForce(&system.m_connectorForces[col*system.m_numConnectors]),
+    m_numConnectors(system.m_numConnectors),
+    m_connector_d(system.m_connector_d),
     m_dynamicLength(m_mu_d*m_f_N/m_k_0)
 {
     // Create the connectors
     m_connectors = new connector[m_numConnectors];
-    for (int j = 0; j < m_numConnectors; j++) {
-        m_connectors[j].pos0 = m_pPosition->x; 
+
+    for (unsigned int j = 0; j < m_numConnectors; j++) {
+        m_connectors[j].pos0 = m_pPosition->x;
+        // Optimisation might skip struct initialisation
         m_connectors[j].state = STATIC;
+        m_connectors[j].timer = 0;
     }
 }
 
@@ -192,13 +196,13 @@ BottomBlock::~BottomBlock()
 double BottomBlock::frictionForce()
 {
     double friction;
-    for(int i = 0; i < m_numConnectors; i++)
+    for(unsigned int i = 0; i < m_numConnectors; i++)
     {
         *(m_pFrictionForce+i) = -springForce(m_k_0, 0, m_connectors[i].pos0, m_pPosition->x);
         if (m_connectors[i].state) {
             if (std::abs(m_pFrictionForce[i]) > m_mu_s * m_f_N) {
                 m_connectors[i].state = DYNAMIC;     // Change state
-                m_connectors[i].timer = 0;           // Start timer
+                m_connectors[i].timer = 0;           // yStart timer
             }
         }
         // If the string is subsequently not attached

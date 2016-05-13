@@ -25,21 +25,21 @@ protected:
     const double m_mu_s;              // Static friction coefficient
     const double m_mu_d;              // Dynamic friction coefficient
     const double m_dt;                // Time step
-    const double *const m_pT;         // Pointer to the time in system
     const double m_d;                 // Distance between each block
     const Vector m_vPusher;           // Velocity of pusher
     const double m_kPusher;           // Spring coefficient of pusher
+    const double *const m_pT;         // Pointer to the time in system
     Block *m_pNeighbours[4];          // Array over pointers to neighbours
     int m_neighboursCounter=0;        // Keep track of the number of neighbours
 public:
-    const int m_row;                  // Row
-    const int m_col;                  // Column
+    const unsigned int m_row;         // Row
+    const unsigned int m_col;         // Column
 
     Vector *const m_pPosition;        // Pointer to position in system
     Vector *const m_pVelocity;        // Pointer to velocity in system
     Vector *const m_pForce;           // Pointer to total force in system
 
-    Block(const System& system, const int row, const int col);
+    Block(const System& system, const unsigned int row, const unsigned int col);
     Block(const Block &obj);
     virtual ~Block();
 
@@ -49,7 +49,7 @@ public:
     double springForce(const double k, const double d, const double p0, const double p1);
     void addNeighbour(Block& block);
     void setNeighbourNullptr();
-    virtual double getStateOfConnector(int index){return -1;};
+    virtual double getStateOfConnector(unsigned int index){return -1;};
     Vector calculateNeighbourForces();
 };
 
@@ -59,14 +59,14 @@ protected:
     // TODO: Make const pointer
     Vector* m_pPusherForce;
 public:
-    PusherBlock(const System& system, const int row, const int column, Vector* pusherForce);
+    PusherBlock(const System& system, const unsigned int row, const unsigned int column, Vector* pusherForce);
     virtual void calculateForces();
 };
 
 class TopBlock: public Block
 {
 public:
-    TopBlock(const System& system, const int row, const int col): Block(system, row,
+    TopBlock(const System& system, const unsigned int row, const unsigned int col): Block(system, row,
     col){}
     //virtual void calculateForces();
     // Anders sa at toppblokkene skal faa en normalkraft
@@ -77,14 +77,14 @@ class BottomBlock: public Block
 protected:
     double *const m_pFrictionForce;   // Pointer to the friction force in system
     connector* m_connectors;          // Array of connectors
-    const int m_numConnectors;        // Number of connectors/micro-junctions
+    const unsigned int m_numConnectors;        // Number of connectors/micro-junctions
     const double m_connector_d;       // Distance between each connector
     const double m_dynamicLength;
 public:
-    BottomBlock(const System& system, const int row, const int col);
+    BottomBlock(const System& system, const unsigned int row, const unsigned int col);
     ~BottomBlock();
     virtual void calculateForces();
-    virtual double getStateOfConnector(int index){return m_connectors[index].state;};
+    virtual double getStateOfConnector(unsigned int index){return m_connectors[index].state;};
     double frictionForce();
 };
 

@@ -14,17 +14,13 @@
 
 using namespace std;
 
-
-// Forward declare functions
-void writeVectorToFile(ofstream & outFile, vector<double> &vec, int numBlocks);
-
 int main() // This function runs when you execute the program.
 {
 	// They constructor takes care of the parameters
     Params params("params.txt");
 	System system(params);
-	const int writeFrequency = 1000 * system.m_tStop;
-	cout << "The write frequency is " << writeFrequency << endl;
+	const unsigned int writeFrequency = 1000 * system.m_tStop;
+    cout << "The write frequency is " << writeFrequency << endl;
 
 	// Create output streams. These are closed upon the deletion of System
 
@@ -32,7 +28,7 @@ int main() // This function runs when you execute the program.
 	clock_t start, end;
 	start = clock();
 
-	int counter = 0;
+	unsigned int counter = 0;
     system.m_t = 0;
 	while (system.m_t<system.m_tStop)
 	{
@@ -64,10 +60,3 @@ int main() // This function runs when you execute the program.
 	return 0;
 
 }
-
-
-void writeVectorToFile(ofstream & outFile, vector<double> &vec, int numBlocks)
-{
-	outFile.write(reinterpret_cast<char*>(&vec[0]), numBlocks*sizeof(double));
-}
-
