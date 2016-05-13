@@ -33,7 +33,7 @@ System::System(const Params & params): m_numBlocksX(params.m_numBlocksX),
 	m_positions		   = new Vector[m_numBlocksY*m_numBlocksX]();
 	m_velocities	   = new Vector[m_numBlocksY*m_numBlocksX]();
 	m_forces		   = new Vector[m_numBlocksY*m_numBlocksX]();
-	m_connectorForces  = new Vector[m_numBlocksX*m_numConnectors]();
+	m_connectorForces  = new double[m_numBlocksX*m_numConnectors]();
     m_states		   = new double[m_numBlocksX*m_numConnectors];
     m_pusherForce      = new Vector[1];
     // Initilize the arrays

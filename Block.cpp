@@ -157,7 +157,7 @@ void PusherBlock::calculateForces()
 void BottomBlock::calculateForces()
 {
     *m_pForce += calculateNeighbourForces()
-              + frictionForce();
+    + Vector(frictionForce(), 0);
 }
 
 /*
@@ -165,7 +165,7 @@ void BottomBlock::calculateForces()
   construct the array of connectors.
 */
 BottomBlock::BottomBlock(const System& system, const int row, const int col):
-    m_connector_d(Vector(system.m_connector_d,0)),
+    m_connector_d(system.m_connector_d),
     m_numConnectors(system.m_numConnectors),
     m_pFrictionForce(&system.m_connectorForces[col*system.m_numConnectors]),
     Block(system, row, col)
@@ -173,7 +173,8 @@ BottomBlock::BottomBlock(const System& system, const int row, const int col):
     // Create the connectors
     m_connectors = new connector[m_numConnectors];
     for (int j = 0; j < m_numConnectors; j++) {
-        m_connectors[j].pos0 = Vector(m_d*col + m_connector_d.x*j,0);
+        m_connectors[j].pos0 = m_d*col + m_connector_d*j;
+        m_connectors[j].state = STATIC;
     }
 }
 
@@ -184,29 +185,27 @@ BottomBlock::~BottomBlock()
     delete m_pFrictionForce;
 }
 
-Vector BottomBlock::frictionForce()
+double BottomBlock::frictionForce()
 {
-    Vector friction;
+    double friction;
     for(int i = 0; i < m_numConnectors; i++)
     {
         if (m_connectors[i].state) {
-            *(m_pFrictionForce+i) = -springForce(m_k_0, 0, m_connectors[i].pos0, *m_pPosition+m_connector_d*i);
-            if (m_pFrictionForce[i].length() > m_mu_s * m_f_N) {
+            *(m_pFrictionForce+i) = -springForce(m_k_0, 0, m_connectors[i].pos0, m_pPosition->x+m_connector_d*i);
+            if (std::abs(m_pFrictionForce[i]) > m_mu_s * m_f_N) {
                 m_connectors[i].state = DYNAMIC;     // Change state
                 m_connectors[i].timer = 0;           // Start timer
             }
         }
         // If the string is subsequently not attached
         if (!m_connectors[i].state) {
-            *(m_pFrictionForce+i) = Vector(-m_mu_d,0);
-            *(m_pFrictionForce+i) *= m_f_N;
-            *(m_pFrictionForce+i) *= std::copysign(1.0, m_pVelocity->x);
+            *(m_pFrictionForce+i) = -m_mu_d* m_f_N* std::copysign(1.0, m_pVelocity->x);
             m_connectors[i].timer += m_dt;
 
             // Check the timer
             if (m_connectors[i].timer > m_time_limit) {
                 m_connectors[i].state = STATIC;
-                m_connectors[i].pos0 = *m_pPosition+m_connector_d*i;
+                m_connectors[i].pos0 = m_pPosition->x+m_connector_d*i;
             }
         }
         friction += *(m_pFrictionForce+i);

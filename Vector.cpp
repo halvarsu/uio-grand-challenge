@@ -11,31 +11,31 @@ Vector::Vector(double a, double b): x(a), y(b)
 
 Vector Vector::operator- () const
 {
-    return Vector(-x, -y);
+    return std::move(Vector(-x, -y));
 }
 
 Vector operator+(const Vector& v1, const Vector& v2)
 {
-    return Vector(v1.x+v2.x, v1.y+v2.y);
+    return std::move(Vector(v1.x+v2.x, v1.y+v2.y));
 }
 
 Vector operator-(const Vector& v1, const Vector& v2)
 {
-    return Vector(v1.x - v2.x, v1.y - v2.y);
+    return std::move(Vector(v1.x - v2.x, v1.y - v2.y));
 }
 
 Vector operator*(const Vector& v1, const Vector& v2)
 {
-    return Vector(v1.x*v2.x, v1.y*v2.y);
+    return std::move(Vector(v1.x*v2.x, v1.y*v2.y));
 }
 
 Vector operator*(double d, const Vector& v1)
 {
-    return Vector(v1.x*d, v1.y*d);
+    return std::move(Vector(v1.x*d, v1.y*d));
 }
 
 Vector operator*(const Vector& v1, double d){
-    return Vector(v1.x*d, v1.y*d);
+    return std::move(Vector(v1.x*d, v1.y*d));
 }
 
 Vector operator/(const Vector& v1, double d)

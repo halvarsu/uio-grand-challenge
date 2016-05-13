@@ -9,7 +9,7 @@ class System;
 class Vector;
 struct connector{
     double state = STATIC;
-    Vector pos0  = Vector(0,0);
+    double pos0  = 0;
     double timer = 0;
 };
 
@@ -75,16 +75,16 @@ public:
 class BottomBlock: public Block
 {
 protected:
-    Vector *const m_pFrictionForce;   // Pointer to the friction force in system
+    double *const m_pFrictionForce;   // Pointer to the friction force in system
     connector* m_connectors;          // Array of connectors
     const int m_numConnectors;        // Number of connectors/micro-junctions
-    const Vector m_connector_d;       // Distance between each connector
+    const double m_connector_d;       // Distance between each connector
 public:
     BottomBlock(const System& system, const int row, const int col);
     ~BottomBlock();
     virtual void calculateForces();
     virtual double getStateOfConnector(int index){return m_connectors[index].state;};
-    Vector frictionForce();
+    double frictionForce();
 };
 
 #endif /* BLOCK_H */

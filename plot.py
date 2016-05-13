@@ -138,7 +138,6 @@ class FrictionAnalyser:
     def animate(self, colormap):
         from animateforce import Blocks
         colormap = mp.cm.get_cmap(colormap)
-
         B = Blocks(self.forces, colormap)
         B.animate()
 

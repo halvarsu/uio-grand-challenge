@@ -4,7 +4,7 @@ dt 1e-7
 tStop 0.01
 t 0
 vPusher 0 4e-4
-kPusher 4e6
+kPusher 0 4e6
 k 2.3e6
 L 0.14
 M 0.0756
