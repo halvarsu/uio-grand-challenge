@@ -128,34 +128,34 @@ void System::linkNeighbours()
 {
     // Link the neighbours
     /*
-      TL = Top Left, L = Left, BL = Bottom Left, T = Top, @ = Block
-      ...T.TL
+      TR = Top Right, R = Right, BR = Bottom Right, T = Top, @ = Block
+      ...T.TR
       ...|/.
-      ...@-L
+      ...@-R
       ....\.
-      .....BL
+      .....BR
 
       Format of the array:
-      [TL BL L T]
+      [TR BR R T]
     */
     for (int y = 0; y < m_numBlocksY; y++){
         for (int x = 0; x < m_numBlocksX; x++){
             if(m_blocks[y][x]){
-                if(y > 0 && x < m_numBlocksX-1){ // Top left
+                if(y > 0 && x < m_numBlocksX-1){ // Top right
                     if(m_blocks[y-1][x+1]) // Check for nullptr
                         m_blocks[y][x]->addNeighbour(*m_blocks[y-1][x+1]);
                 }
                 else
                     m_blocks[y][x]->setNeighbourNullptr();
 
-                if(y < m_numBlocksY-1 && x < m_numBlocksX-1){ // Bottom left
+                if(y < m_numBlocksY-1 && x < m_numBlocksX-1){ // Bottom right
                     if(m_blocks[y+1][x+1])
                         m_blocks[y][x]->addNeighbour(*m_blocks[y+1][x+1]);
                 }
                 else
                     m_blocks[y][x]->setNeighbourNullptr();
 
-                if(x < m_numBlocksX-1){ // Left
+                if(x < m_numBlocksX-1){ // Right
                     if(m_blocks[y][x+1])
                         m_blocks[y][x]->addNeighbour(*m_blocks[y][x+1]);
                 }
