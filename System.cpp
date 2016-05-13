@@ -128,15 +128,15 @@ void System::linkNeighbours()
 {
     // Link the neighbours
     /*
-      TL = Top Left, L = Left, BL = Bottom Left, T = Top, @ = Block
-      ...T.TL
+      TR = Top Right, R = Right, BR = Bottom Right, T = Top, @ = Block
+      ...T.TR
       ...|/.
-      ...@-L
+      ...@-R
       ....\.
-      .....BL
+      .....BR
 
       Format of the array:
-      [TL BL L T]
+      [TR BR R T]
     */
     for (int y = 0; y < m_numBlocksY; y++){
         for (int x = 0; x < m_numBlocksX; x++){
