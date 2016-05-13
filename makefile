@@ -9,7 +9,7 @@ paranoid:
 	-Wswitch-default -Wundef -Werror -Wno-unused main.cpp Block.cpp System.cpp \
 	Params.cpp Vector.cpp -o main
 fast:
-	g++ -std=c++11 -Ofast -march=native -flto -fwhole-program main.cpp \
+	g++ -std=c++11 -O3 -march=native -flto -fwhole-program main.cpp \
 	Block.cpp Params.cpp System.cpp Vector.cpp -o main -o f
 clean:
 	rm *o main

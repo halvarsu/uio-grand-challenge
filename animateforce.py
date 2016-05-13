@@ -12,7 +12,7 @@ class Blocks():
         self.fig, self.ax = plt.subplots()
         self.colormap = colormap
         self.norm = SymLogNorm(linthresh=0.3,linscale=0.3, vmin=-1e-8,vmax=1e-8)
-        self.plot =  self.ax.pcolormesh(self.data[0,:,:,0], norm=self.norm,
+        self.plot =  self.ax.pcolormesh(self.data[0,:,:,0], #norm=self.norm,
                                        cmap=self.colormap)
         self.fig.colorbar(self.plot, ax=self.ax, extend='both')
         self.ax.set_title('Forces')
@@ -24,7 +24,7 @@ class Blocks():
                                        frames=self.data.shape[0]-1)
 
     def update(self, num):
-        self.plot =  self.ax.pcolormesh(self.data[num,:,:,1], norm=self.norm,
+        self.plot =  self.ax.pcolormesh(self.data[num,:,:,1], #norm=self.norm,
                                         cmap=self.colormap)
         return self.plot,
 
