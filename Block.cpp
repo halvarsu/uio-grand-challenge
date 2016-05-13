@@ -84,7 +84,7 @@ Vector Block::viscousForce(const double eta, const Vector v0, const Vector v1)
 }
 
 /*
-  The format of the neighbours array is [top left, bottom left, left, bottom]
+  The format of the neighbours array is [top right, bottom right, right, bottom]
  */
 void Block::addNeighbour(Block &block)
 {
