@@ -2,8 +2,8 @@ nx 10
 ny 10
 dt 1e-07
 tStop 0.01
-vPusher 0
-kPusher 0
+vPusher 0.0004
+kPusher 4e+06
 k 2.3e+06
 L 0.14
 M 0.0756

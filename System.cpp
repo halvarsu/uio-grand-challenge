@@ -1,5 +1,5 @@
 #include "headers/System.h"
-#include <typeinfo>
+//#include <typeinfo>
 
 System::System(const Params & params): 
                                        m_vPusher(params.m_vPusher),
@@ -44,6 +44,8 @@ System::System(const Params & params):
         for (unsigned int x = 0; x < m_numBlocksX; x++) {
             m_positions[y*m_numBlocksX+x].x = m_d*x;
             m_positions[y*m_numBlocksX+x].y = m_d*y;
+//            std::cout << x << ',' << y << '\t' << m_forces[y*m_numBlocksX+x].x
+//                      << '\t' << m_forces[y*m_numBlocksX+x].y << std::endl;
         }
 
     }
@@ -183,12 +185,15 @@ void System::linkNeighbours()
 void System::simulate()
 {
 
+
     // Reset and recalculate the forces
     for (unsigned int y = 0; y < m_numBlocksY; y++) {
         for (unsigned int x = 0; x < m_numBlocksX; x++) {
             m_forces[y*m_numBlocksX+x] = Vector(0,0);
         }
     }
+
+
     for (unsigned int y = 0; y < m_numBlocksY; y++) {
         for (unsigned int x = 0; x < m_numBlocksX; x++) {
             if(m_blocks[y][x]) // Deleted blocks are nullptr
@@ -232,6 +237,37 @@ void System::dumpData()
     writeArrayToFile(m_ofConnectors, m_connectorForces, m_numBlocksX*m_numConnectors);
     writeArrayToFile(m_ofPusherForce, m_pusherForce, 1);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void System::writeArrayToFile(std::ofstream & outFile,  double * array,
 const unsigned int numBlocks)

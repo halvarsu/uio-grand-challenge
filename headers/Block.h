@@ -34,9 +34,10 @@ protected:
 public:
     const unsigned int m_row;         // Row
     const unsigned int m_col;         // Column
+    const System* const m_pParent;
 
-    Vector *const m_pPosition;        // Pointer to position in system
-    Vector *const m_pVelocity;        // Pointer to velocity in system
+    const Vector *const m_pPosition;        // Pointer to position in system
+    const Vector *const m_pVelocity;        // Pointer to velocity in system
     Vector *const m_pForce;           // Pointer to total force in system
 
     Block(const System& system, const unsigned int row, const unsigned int col);
@@ -44,20 +45,27 @@ public:
     virtual ~Block();
 
     virtual void calculateForces();
-    Vector viscousForce(const double eta, const Vector v0, const Vector v1);
-    Vector springForce(const double k, const double d, const Vector p0, const Vector p1);
-    double springForce(const double k, const double d, const double p0, const double p1);
+    inline Vector viscousForce(const double eta, const Vector v0, const Vector v1) const;
+    inline Vector springForce(const double k, const double d, const Vector p0, const
+    Vector p1) const;
+    inline double springForce(const double k, const double d, const double p0, const
+    double p1) const;
+    // inline Vector viscousForce(const double eta, volatile const Vector v0,
+    // volatile const Vector v1) const;
+    // inline Vector springForce(const double k, const double d, volatile
+    // const Vector p0, volatile const Vector p1) const;
+    // inline double springForce(const double k, const double d, volatile const
+    // double p0, volatile const double p1) const;
     void addNeighbour(Block& block);
     void setNeighbourNullptr();
-    virtual double getStateOfConnector(unsigned int index){return -1;};
+    virtual double getStateOfConnector(unsigned int index) const {return -1;};
     Vector calculateNeighbourForces();
 };
 
 class PusherBlock: public Block
 {
 protected:
-    // TODO: Make const pointer
-    Vector* m_pPusherForce;
+    Vector *const m_pPusherForce;
 public:
     PusherBlock(const System& system, const unsigned int row, const unsigned int column, Vector* pusherForce);
     virtual void calculateForces();
@@ -84,11 +92,25 @@ public:
     BottomBlock(const System& system, const unsigned int row, const unsigned int col);
     ~BottomBlock();
     virtual void calculateForces();
-    virtual double getStateOfConnector(unsigned int index){return m_connectors[index].state;};
+    virtual double getStateOfConnector(unsigned int index) const {return m_connectors[index].state;};
     double frictionForce();
 };
 
 #endif /* BLOCK_H */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

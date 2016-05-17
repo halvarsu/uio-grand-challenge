@@ -6,6 +6,9 @@ Vector::Vector(): x(0.0), y(0.0)
 Vector::Vector(const Vector& obj): x(obj.x), y(obj.y)
 {}
 
+Vector::Vector(volatile const Vector& obj): x(obj.x), y(obj.y)
+{}
+
 Vector::Vector(double a, double b): x(a), y(b)
 {}
 
@@ -15,6 +18,11 @@ Vector Vector::operator- () const
 }
 
 Vector operator+(const Vector& v1, const Vector& v2)
+{
+    return std::move(Vector(v1.x+v2.x, v1.y+v2.y));
+}
+
+Vector operator+(volatile const Vector& v1, volatile const Vector& v2)
 {
     return std::move(Vector(v1.x+v2.x, v1.y+v2.y));
 }

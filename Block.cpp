@@ -1,6 +1,4 @@
 #include "./headers/Block.h"
-
-
 /*
   Constructor for Block. Initialize all of the variables from System and
   construct the array of connecturs.
@@ -22,7 +20,8 @@ Block::Block(const System& system, const unsigned int row, const unsigned int co
     m_row(row), m_col(col),
     m_pPosition(&system.m_positions[row*system.m_numBlocksX+col]),
     m_pVelocity(&system.m_velocities[row*system.m_numBlocksX+col]),
-    m_pForce(&system.m_forces[row*system.m_numBlocksX+col])
+    m_pForce(&system.m_forces[row*system.m_numBlocksX+col]),
+    m_pParent(&system)
 {
     for (int i = 0; i < 4; i++) {
         m_pNeighbours[i] = nullptr;
@@ -50,7 +49,8 @@ Block::Block(const Block &obj):
     m_row(obj.m_row), m_col(obj.m_col),
     m_pPosition(obj.m_pPosition),
     m_pVelocity(obj.m_pVelocity),
-    m_pForce(obj.m_pForce)
+    m_pForce(obj.m_pForce),
+    m_pParent(obj.m_pParent)
 {
     std::cerr << "This should never happen" << std::endl;
 }
@@ -65,7 +65,8 @@ Block::~Block()
     delete m_pT;
 }
 
-Vector Block::springForce(const double k, const double d, const Vector p0, const Vector p1)
+inline Vector Block::springForce(const double k, const double d, const Vector p0,
+const Vector p1) const
 {
     Vector spring = p1 - p0;
     double distance = spring.length();
@@ -73,15 +74,18 @@ Vector Block::springForce(const double k, const double d, const Vector p0, const
     return forceTotal * spring;
 }
 
-double Block::springForce(const double k, const double d, const double p0, const double p1)
+inline Vector Block::viscousForce(const double eta, const Vector v0, const Vector v1)
+const 
+{
+    return eta*(v1 - v0);
+}
+
+inline double Block::springForce(const double k, const double d, const double
+p0, const double p1) const
 {
     return k*(p1 - p0 - d);
 }
 
-Vector Block::viscousForce(const double eta, const Vector v0, const Vector v1)
-{
-    return eta*(v1 - v0);
-}
 
 /*
   The format of the neighbours array is [top right, bottom right, right, bottom]
@@ -112,7 +116,7 @@ Vector Block::calculateNeighbourForces(){
         if(m_pNeighbours[i]) // May be nullptr
         {
             Vector tmp;
-            Block *neighbour = m_pNeighbours[i];
+            volatile Block *neighbour = m_pNeighbours[i];
             if(i < 2){ // Diagonal springs
                 tmp = springForce(m_k/2, m_d*SQRT2, *m_pPosition,
                                   *(neighbour->m_pPosition))
@@ -156,8 +160,9 @@ void PusherBlock::calculateForces()
 
 void BottomBlock::calculateForces()
 {
-    *m_pForce += calculateNeighbourForces()
-    + Vector(frictionForce(), 0);
+    *m_pForce += calculateNeighbourForces(),
+        Vector(frictionForce(), 0);
+
 }
 
 /*
@@ -186,77 +191,54 @@ BottomBlock::BottomBlock(const System& system, const unsigned int row, const
 BottomBlock::~BottomBlock()
 {
     //~Block();
+    /* The following if-statement will never be true, but the
+       compiler will never be able to figure that it. It will therefore
+       leave it untouched during optimizations. As a consequence,
+       it must also leave m_pFrictionForce untouched, forcing it to
+       not optimize it, and thus not fuck with the code
+    */
+    if(m_pParent->m_t == m_pParent->m_dt)
+        std::cout << *m_pFrictionForce << std::endl;
+    
     delete[] m_connectors;
     delete m_pFrictionForce;
 }
-
-        
-
 
 double BottomBlock::frictionForce()
 {
     double friction;
     for(unsigned int i = 0; i < m_numConnectors; i++)
     {
-        *(m_pFrictionForce+i) = -springForce(m_k_0, 0, m_connectors[i].pos0, m_pPosition->x);
-        if (m_connectors[i].state) {
-            if (std::abs(m_pFrictionForce[i]) > m_mu_s * m_f_N) {
-                m_connectors[i].state = DYNAMIC;     // Change state
-                m_connectors[i].timer = 0;           // yStart timer
+        *(m_pFrictionForce+i) = -springForce(m_k_0, 0, (m_connectors+i)->pos0, m_pPosition->x);
+        if ((m_connectors+i)->state) {
+            if (std::abs(*(m_pFrictionForce+i)) > m_mu_s * m_f_N) {
+                (m_connectors+i)->state = DYNAMIC;     // Change state
+                (m_connectors+i)->timer = 0;           // Start timer
             }
         }
         // If the string is subsequently not attached
-        if (!m_connectors[i].state)
+        if (!(m_connectors+i)->state)
         {
             double dFriction = m_mu_d*m_f_N;
             if (*(m_pFrictionForce+i) < - dFriction)
             {
                 *(m_pFrictionForce+i) = - dFriction;
-                m_connectors[i].pos0 = m_pPosition->x - m_dynamicLength;
+                (m_connectors+i)->pos0 = m_pPosition->x - m_dynamicLength;
             } 
             if (*(m_pFrictionForce+i) > dFriction)
             {
                 *(m_pFrictionForce+i) = dFriction;
-                m_connectors[i].pos0 = m_pPosition->x + m_dynamicLength;
+                (m_connectors+i)->pos0 = m_pPosition->x + m_dynamicLength;
             } 
-            m_connectors[i].timer += m_dt;
+            (m_connectors+i)->timer += m_dt;
 
             // Check the timer
-            if (m_connectors[i].timer > m_time_limit) {
-                m_connectors[i].state = STATIC;
-                m_connectors[i].pos0 = m_pPosition->x;
+            if ((m_connectors+i)->timer > m_time_limit) {
+                (m_connectors+i)->state = STATIC;
+                (m_connectors+i)->pos0 = m_pPosition->x;
             }
         }
         friction += *(m_pFrictionForce+i);
     }
     return friction;
 }
-/*Vector BottomBlock::frictionForce()
-{
-    Vector friction;
-    for(int i = 0; i < m_numConnectors; i++)
-    {
-        if (m_connectors[i].state) {
-            *(m_pFrictionForce+i) = -springForce(m_k_0, 0, m_connectors[i].pos0, m_pPosition->x+m_connector_d*i);
-            if (std::abs(m_pFrictionForce[i]) > m_mu_s * m_f_N) {
-                m_connectors[i].state = DYNAMIC;     // Change state
-                m_connectors[i].timer = 0;           // Start timer
-            }
-        }
-        // If the string is subsequently not attached
-        if (!m_connectors[i].state) {
-            *(m_pFrictionForce+i) = -m_mu_d * m_f_N * std::copysign(1.0, m_pVelocity->x);
-            m_connectors[i].timer += m_dt;
-
-            // Check the timer
-            if (m_connectors[i].timer > m_time_limit) {
-                m_connectors[i].state = STATIC;
-                m_connectors[i].pos0 = m_pPosition->x+m_connector_d*i;
-            }
-        }
-        friction += *(m_pFrictionForce+i);
-    }
-    return friction;
-}
-
-*/

@@ -163,6 +163,7 @@ if __name__ == "__main__":
     analyser = FrictionAnalyser(filenameParameters)
     if args.animate:
         analyser.loadForces(filenameForces)
+        #analyser.loadPositions(filenamePositions)
         analyser.animate(args.colormap)
     else:
         analyser.loadStates(filenameStates)
