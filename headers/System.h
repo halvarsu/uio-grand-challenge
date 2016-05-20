@@ -27,6 +27,8 @@ class System{
 private:
     friend class Block;
     friend class BottomBlock;
+    friend class TopBlock;
+    friend class PusherBlock;
 	const double m_vPusher ;         // Velocity of the pusher
 	const double m_kPusher ;         // Spring coefficient of the pusher
 	const double m_k       ;         // Spring coefficient of the system
@@ -36,13 +38,16 @@ private:
 	const double m_mu_d    ;         // Dynamic friction coefficient
     const double m_N       ;         // Normal force on the system
 	const double m_time_limit;       // Time for connector to by in dynamic state
+    const double m_normalForceTime;  // Time for which to increase the normal force
     const unsigned int m_pusherBlockPosition; // Index of the block pushing
 	const double m_d       ;         // Length of a block
 	const double m_m       ;         // Mass the each block
 	const double m_eta     ;         // Damping coefficient
-	const double m_f_N     ;         // Normal force on each block
-	const double m_k_0     ;         // Spring coefficient of connectors
+	double m_f_N           ;         // Normal force on each block
+	double m_k_0           ;         // Spring coefficient of connectors
     const double m_connector_d;      // Length between each connector on a block
+    double m_dynamicLength;
+    bool m_doPush;
 	double* m_states  ;        // States to be dumped to file
 	double* m_connectorForces; // Force from each connector
 	Vector* m_positions;       // Position of each block
@@ -54,7 +59,7 @@ public:
     const unsigned int m_numBlocksY  ;  // Number of blocks in the y-direction
     const unsigned int m_numConnectors; // Number of connectors
 	double m_t       ;
-    const double m_tStop   ;
+    const double m_tStop;
     double m_dt      ;
     std::vector< std::vector<Block*> > m_blocks;          // Array for pointers
                                                           // to Block objects
@@ -97,9 +102,9 @@ public:
 
     void createGeometry(const std::vector< std::vector<blockType> >& geometry);
 
-    void simulate();
+    void makeNormalForce();
 
-    void integrate();
+    void simulate();
 
     void fillStatesArray(); // A very inefficient solution
 

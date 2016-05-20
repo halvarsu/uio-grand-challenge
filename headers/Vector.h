@@ -10,11 +10,9 @@ public:
 
     Vector();
     Vector(const Vector& obj);
-    Vector(volatile const Vector& obj);
     Vector(double a, double b);
     Vector operator- () const;
     friend Vector operator+(const Vector& v1, const Vector& v2);
-    friend Vector operator+(volatile const Vector& v1, volatile const Vector& v2);
     friend Vector operator-(const Vector& v1, const Vector& v2);
     friend Vector operator*(const Vector& v1, const Vector& v2);
     friend Vector operator*(double d, const Vector& v1);

@@ -13,6 +13,7 @@ Params::Params(std::string filenameParameters):
     m_time_limit(I_DEFAULT),
     m_numBlocksX(I_DEFAULT),
     m_numBlocksY(I_DEFAULT),
+    m_normalForceTime(F_DEFAULT),
     m_tStop(F_DEFAULT),
     m_dt(F_DEFAULT),
     m_numConnectors(I_DEFAULT),
@@ -80,6 +81,8 @@ int Params::readParameters(std::string filenameParameters)
             m_numConnectors = atoi(tokens[1].c_str()); 
         } else if(tokens[0] == "dt"){
             m_dt = atof(tokens[1].c_str());
+        } else if(tokens[0] == "normalForceTime"){
+            m_normalForceTime = atof(tokens[1].c_str());
         } else if(tokens[0] == "tStop"){
             m_tStop = atof(tokens[1].c_str());
         } else if(tokens[0] == "numBlocksX"){
@@ -147,6 +150,9 @@ int Params::checkParameters()
     }
     if(m_numBlocksY == I_DEFAULT){
         std::cerr << "m_numBlocksY is not set" << std::endl;
+    }
+    if(m_normalForceTime == F_DEFAULT){
+        std::cerr << "m_normalForceTime is not set" << std::endl;
     }
     if(m_tStop == F_DEFAULT){
         std::cerr << "m_tStop is not set" << std::endl;

@@ -11,8 +11,8 @@ m 0.00756
 eta 41.6989
 mu_s 0.4
 mu_d 0.17
-k_0 19799
-f_N 0.01
+k_0 42000
+f_N 0.045
 N 1
 time_limit 0.002
 numConnectors 1

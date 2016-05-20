@@ -6,9 +6,6 @@ Vector::Vector(): x(0.0), y(0.0)
 Vector::Vector(const Vector& obj): x(obj.x), y(obj.y)
 {}
 
-Vector::Vector(volatile const Vector& obj): x(obj.x), y(obj.y)
-{}
-
 Vector::Vector(double a, double b): x(a), y(b)
 {}
 

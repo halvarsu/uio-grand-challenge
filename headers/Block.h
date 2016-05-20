@@ -18,10 +18,9 @@ class Block
 protected:
     const double m_k;                 // Spring coefficient between the blocks
     const double m_m;                 // Mass of each block
-    const double m_f_N;               // Normal force on each block
+    const double *const m_pF_N;        // Normal force on each block
     const double m_eta;               // Dampning coefficient
     const double m_time_limit;        // Time for connectors to stay in dynamic
-    const double m_k_0;               // Spring coefficient for connectors
     const double m_mu_s;              // Static friction coefficient
     const double m_mu_d;              // Dynamic friction coefficient
     const double m_dt;                // Time step
@@ -66,6 +65,7 @@ class PusherBlock: public Block
 {
 protected:
     Vector *const m_pPusherForce;
+    const bool *const m_pDoPush;
 public:
     PusherBlock(const System& system, const unsigned int row, const unsigned int column, Vector* pusherForce);
     virtual void calculateForces();
@@ -76,8 +76,7 @@ class TopBlock: public Block
 public:
     TopBlock(const System& system, const unsigned int row, const unsigned int col): Block(system, row,
     col){}
-    //virtual void calculateForces();
-    // Anders sa at toppblokkene skal faa en normalkraft
+    virtual void calculateForces();
 };
 
 class BottomBlock: public Block
@@ -85,9 +84,10 @@ class BottomBlock: public Block
 protected:
     double *const m_pFrictionForce;   // Pointer to the friction force in system
     connector* m_connectors;          // Array of connectors
+    const double *const m_pk_0;               // Spring coefficient for connectors
     const unsigned int m_numConnectors;        // Number of connectors/micro-junctions
     const double m_connector_d;       // Distance between each connector
-    const double m_dynamicLength;
+    const double *const m_pDynamicLength;
 public:
     BottomBlock(const System& system, const unsigned int row, const unsigned int col);
     ~BottomBlock();

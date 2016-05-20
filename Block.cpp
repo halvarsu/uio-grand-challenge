@@ -6,10 +6,9 @@
 Block::Block(const System& system, const unsigned int row, const unsigned int col):
     m_k(system.m_k),
     m_m(system.m_m),
-    m_f_N(system.m_f_N),
+    m_pF_N(&system.m_f_N),
     m_eta(system.m_eta),
     m_time_limit(system.m_time_limit),
-    m_k_0(system.m_k_0),
     m_mu_s(system.m_mu_s),
     m_mu_d(system.m_mu_d),
     m_dt(system.m_dt),
@@ -34,10 +33,9 @@ Block::Block(const System& system, const unsigned int row, const unsigned int co
 Block::Block(const Block &obj):
     m_k(obj.m_k),
     m_m(obj.m_m),
-    m_f_N(obj.m_f_N),
+    m_pF_N(obj.m_pF_N),
     m_eta(obj.m_eta),
     m_time_limit(obj.m_time_limit),
-    m_k_0(obj.m_k_0),
     m_mu_s(obj.m_mu_s),
     m_mu_d(obj.m_mu_d),
     m_dt(obj.m_dt),
@@ -63,6 +61,7 @@ Block::~Block()
     delete m_pVelocity;
     delete m_pForce;
     delete m_pT;
+    delete m_pF_N;
 }
 
 inline Vector Block::springForce(const double k, const double d, const Vector p0,
@@ -86,7 +85,6 @@ p0, const double p1) const
     return k*(p1 - p0 - d);
 }
 
-
 /*
   The format of the neighbours array is [top right, bottom right, right, bottom]
  */
@@ -95,8 +93,8 @@ void Block::addNeighbour(Block &block)
     if(m_neighboursCounter >= 4)
         std::cerr << "Can not add any more neighbours" << std::endl;
     else{
-    m_pNeighbours[m_neighboursCounter] = &block;
-    ++m_neighboursCounter;
+        m_pNeighbours[m_neighboursCounter] = &block;
+        ++m_neighboursCounter;
     }
 }
 
@@ -118,20 +116,21 @@ Vector Block::calculateNeighbourForces(){
             Vector tmp;
             volatile Block *neighbour = m_pNeighbours[i];
             if(i < 2){ // Diagonal springs
+                continue;
                 tmp = springForce(m_k/2, m_d*SQRT2, *m_pPosition,
                                   *(neighbour->m_pPosition))
                     + viscousForce(m_eta/2, *m_pVelocity,
-                                  *(neighbour->m_pVelocity));
+                                *(neighbour->m_pVelocity));
             } else { // Orthogonal springs
                 tmp = springForce(m_k, m_d, *m_pPosition,
                                   *(neighbour->m_pPosition))
-                    + viscousForce(m_eta, *m_pVelocity,
+                     + viscousForce(m_eta, *m_pVelocity,
                                   *(neighbour->m_pVelocity));
             }
             // Add the opposite force to the neighbour
             *(neighbour->m_pForce) -= tmp;
 
-            force += tmp;
+            force = tmp;
         }
     }
     return force;
@@ -145,14 +144,15 @@ void Block::calculateForces()
 PusherBlock::PusherBlock(const System& system, const unsigned int row, const unsigned int col,
                          Vector* pusherForce):
     Block(system, row, col),
-    m_pPusherForce(pusherForce)
+    m_pPusherForce(pusherForce),
+    m_pDoPush(&system.m_doPush)
 {}
 
 void PusherBlock::calculateForces()
 {
-    //  
+    //  TODO: Try to make this spring force one dimensional
     Vector pusherPosition(m_vPusher.x * (*m_pT), m_pPosition->y);
-    Vector pusherForce = springForce(m_kPusher, 0, *m_pPosition, pusherPosition);
+    Vector pusherForce = *m_pDoPush * springForce(m_kPusher, 0, *m_pPosition, pusherPosition);
     *m_pForce += calculateNeighbourForces()
               + pusherForce;
     *m_pPusherForce = pusherForce;
@@ -162,7 +162,6 @@ void BottomBlock::calculateForces()
 {
     *m_pForce += calculateNeighbourForces(),
         Vector(frictionForce(), 0);
-
 }
 
 /*
@@ -173,9 +172,10 @@ BottomBlock::BottomBlock(const System& system, const unsigned int row, const
   unsigned int col):
     Block(system, row, col),
     m_pFrictionForce(&system.m_connectorForces[col*system.m_numConnectors]),
+    m_pk_0(&system.m_k_0),
     m_numConnectors(system.m_numConnectors),
     m_connector_d(system.m_connector_d),
-    m_dynamicLength(m_mu_d*m_f_N/m_k_0)
+    m_pDynamicLength(&system.m_dynamicLength)
 {
     // Create the connectors
     m_connectors = new connector[m_numConnectors];
@@ -195,13 +195,16 @@ BottomBlock::~BottomBlock()
        compiler will never be able to figure that it. It will therefore
        leave it untouched during optimizations. As a consequence,
        it must also leave m_pFrictionForce untouched, forcing it to
-       not optimize it, and thus not fuck with the code
+       not optimize it, and thus not fuck with the code. In other words,
+       never remove this piece of code.
     */
     if(m_pParent->m_t == m_pParent->m_dt)
         std::cout << *m_pFrictionForce << std::endl;
     
     delete[] m_connectors;
     delete m_pFrictionForce;
+    delete m_pDynamicLength;
+    delete m_pk_0;
 }
 
 double BottomBlock::frictionForce()
@@ -209,9 +212,9 @@ double BottomBlock::frictionForce()
     double friction;
     for(unsigned int i = 0; i < m_numConnectors; i++)
     {
-        *(m_pFrictionForce+i) = -springForce(m_k_0, 0, (m_connectors+i)->pos0, m_pPosition->x);
+        *(m_pFrictionForce+i) = -springForce(*m_pk_0, 0, (m_connectors+i)->pos0, m_pPosition->x);
         if ((m_connectors+i)->state) {
-            if (std::abs(*(m_pFrictionForce+i)) > m_mu_s * m_f_N) {
+            if (std::abs(*(m_pFrictionForce+i)) > m_mu_s * *m_pF_N) {
                 (m_connectors+i)->state = DYNAMIC;     // Change state
                 (m_connectors+i)->timer = 0;           // Start timer
             }
@@ -219,16 +222,16 @@ double BottomBlock::frictionForce()
         // If the string is subsequently not attached
         if (!(m_connectors+i)->state)
         {
-            double dFriction = m_mu_d*m_f_N;
+            double dFriction = m_mu_d* *m_pF_N;
             if (*(m_pFrictionForce+i) < - dFriction)
             {
                 *(m_pFrictionForce+i) = - dFriction;
-                (m_connectors+i)->pos0 = m_pPosition->x - m_dynamicLength;
+                (m_connectors+i)->pos0 = m_pPosition->x - *m_pDynamicLength;
             } 
             if (*(m_pFrictionForce+i) > dFriction)
             {
                 *(m_pFrictionForce+i) = dFriction;
-                (m_connectors+i)->pos0 = m_pPosition->x + m_dynamicLength;
+                (m_connectors+i)->pos0 = m_pPosition->x + *m_pDynamicLength;
             } 
             (m_connectors+i)->timer += m_dt;
 
@@ -241,4 +244,9 @@ double BottomBlock::frictionForce()
         friction += *(m_pFrictionForce+i);
     }
     return friction;
+}
+
+void TopBlock::calculateForces()
+{
+    *m_pForce += calculateNeighbourForces() + Vector(0, *m_pF_N);   
 }

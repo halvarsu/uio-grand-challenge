@@ -33,7 +33,8 @@ public:
     double m_N       ;
 	double m_time_limit; // Crap, misaligned
 	unsigned int m_numBlocksX ;
-    unsigned int m_numBlocksY ; 
+    unsigned int m_numBlocksY ;
+    double m_normalForceTime;
     double m_tStop   ;
     double m_dt      ;
     unsigned int m_numConnectors;

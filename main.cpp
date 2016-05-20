@@ -30,6 +30,7 @@ int main() // This function runs when you execute the program.
 
 	unsigned int counter = 0;
     system.m_t = 0;
+    system.makeNormalForce();
 	while (system.m_t<system.m_tStop)
 	{
         // Simulate a timestep of the entire system

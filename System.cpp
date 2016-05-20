@@ -11,13 +11,14 @@ System::System(const Params & params):
                                        m_mu_d(params.m_mu_d),
                                        m_N(params.m_N),
                                        m_time_limit(params.m_time_limit),
+                                       m_normalForceTime(params.m_normalForceTime),
                                        m_pusherBlockPosition(params.m_pusherBlockPosition),
                                        m_d(m_L/(params.m_numBlocksX-1)),
                                        m_m(m_M/params.m_numBlocksX),
                                        m_eta(sqrt(0.1)*sqrt(m_k*m_m)),
-                                       m_f_N(m_N/(params.m_numBlocksX*params.m_numBlocksY)),
-                                       m_k_0(sqrt(39.2e9*m_f_N)),
                                        m_connector_d(m_d/params.m_numConnectors),
+                                       m_dynamicLength(0),
+                                       m_doPush(false),
                                        m_numBlocksX(params.m_numBlocksX),
                                        m_numBlocksY(params.m_numBlocksY),
                                        m_numConnectors(params.m_numConnectors),
@@ -144,19 +145,19 @@ void System::linkNeighbours()
       .....BR
 
       Format of the array:
-      [TR BR R T]
+      [BR TR R T]
     */
     for (unsigned int y = 0; y < m_numBlocksY; y++){
         for (unsigned int x = 0; x < m_numBlocksX; x++){
             if(m_blocks[y][x]){
-                if(y > 0 && x < m_numBlocksX-1){ // Top right
+                if(y > 0 && x < m_numBlocksX-1){ // Bottom right
                     if(m_blocks[y-1][x+1]) // Check for nullptr
                         m_blocks[y][x]->addNeighbour(*m_blocks[y-1][x+1]);
                 }
                 else
                     m_blocks[y][x]->setNeighbourNullptr();
 
-                if(y < m_numBlocksY-1 && x < m_numBlocksX-1){ // Bottom right
+                if(y < m_numBlocksY-1 && x < m_numBlocksX-1){ // Top right
                     if(m_blocks[y+1][x+1])
                         m_blocks[y][x]->addNeighbour(*m_blocks[y+1][x+1]);
                 }
@@ -170,7 +171,7 @@ void System::linkNeighbours()
                 else
                     m_blocks[y][x]->setNeighbourNullptr();
 
-                if(y < m_numBlocksY-1){ // Top
+                if(y > m_numBlocksY-1){ // Top
                     if(m_blocks[y+1][x])
                         m_blocks[y][x]->addNeighbour(*m_blocks[y+1][x]);
                 }
@@ -181,6 +182,21 @@ void System::linkNeighbours()
     }
 }
 
+void System::makeNormalForce()
+{
+    std::cout << "Increasing normal force...";
+    const double dN = m_N / m_normalForceTime;
+    for (double t = 0; t < m_normalForceTime; t += m_dt) {
+        m_f_N += (dN * t)/(m_numBlocksX*m_numBlocksY);
+        m_k_0 = sqrt(39.2e9*m_f_N);
+        m_dynamicLength = m_mu_d * m_f_N / m_k_0;
+        simulate();
+    }
+    std::cout << "ok" << std::endl
+              << "Normal force on a top block is " << m_f_N << std::endl;
+    std::cout << "Turning on pushing force" << std::endl;
+    m_doPush = true;
+}
 
 void System::simulate()
 {
@@ -208,7 +224,9 @@ void System::simulate()
      */
     for (unsigned int y = 0; y < m_numBlocksY; y++) {
         for (unsigned int x = 0; x < m_numBlocksX; x++) {
-            Vector vel_halfstep = m_velocities[y*m_numBlocksX+x] + m_forces[y*m_numBlocksX+x]*m_dt/(2*m_m);
+            Vector force = m_forces[y*m_numBlocksX+x];
+            Vector vel_halfstep = m_velocities[y*m_numBlocksX+x];
+            vel_halfstep += force*m_dt/(2*m_m);
             m_positions[y*m_numBlocksX+x] += vel_halfstep*m_dt;
             m_velocities[y*m_numBlocksX+x] = vel_halfstep + m_forces[y*m_numBlocksX+x]*m_dt/(2*m_m);
         }
@@ -237,37 +255,6 @@ void System::dumpData()
     writeArrayToFile(m_ofConnectors, m_connectorForces, m_numBlocksX*m_numConnectors);
     writeArrayToFile(m_ofPusherForce, m_pusherForce, 1);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void System::writeArrayToFile(std::ofstream & outFile,  double * array,
 const unsigned int numBlocks)
