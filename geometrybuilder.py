@@ -4,6 +4,7 @@ from scipy.signal import convolve2d
 import matplotlib.pyplot as plt
 from matplotlib.patches import RegularPolygon
 from matplotlib.artist import Artist
+import argparse
 
 plt.rcParams['keymap.save'] = ''
 plt.rcParams['keymap.forward'] = ''
@@ -35,6 +36,7 @@ class Block(object):
                                    fc=_fc)
         self.state = 'block'
         self.mark = 'unmarked'
+
 
     def change_state(self):
         if self.state == 'block':
@@ -87,10 +89,14 @@ class Geometry(object):
                               [0.75, 0.65], [0.25, 0.5]])
     modes = ['normal', 'visual', 'insert', 'delete', 'modify', 'visual_line']
     mode_params = {'level': 1, 'direction': 'horizontal', 'index':0}
-
+    topBlock_color = '#AAAAAA'
+    pusherBlock_color = 'darkred'
+    bottomBlock_color = 'darkgreen'
     def __init__(self, height, width):
         self.width, self.height = width, height
-
+        print("Top Block", self.topBlock_color)
+        print("Bottom Block", self.bottomBlock_color)
+        print("Pusher Block", self.pusherBlock_color)
         # Create the figure and axes
         self.fig = plt.figure(figsize=((width + 2) / 3., (height + 2) / 3.))
         self.ax = self.fig.add_axes((0.05, 0.05, 0.9, 0.9),
@@ -334,5 +340,9 @@ class Geometry(object):
         np.savetxt(filename, symbols, delimiter='', fmt='%s')
         
 if __name__ == '__main__':
-    geo = Geometry(10, 10)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("y", type=int, default=10)
+    parser.add_argument("x", type=int, default=10)
+    args = parser.parse_args()
+    geo = Geometry(args.y, args.x)
     plt.show()

@@ -171,7 +171,7 @@ void System::linkNeighbours()
                 else
                     m_blocks[y][x]->setNeighbourNullptr();
 
-                if(y > m_numBlocksY-1){ // Top
+                if(y < m_numBlocksY-1){ // Top
                     if(m_blocks[y+1][x])
                         m_blocks[y][x]->addNeighbour(*m_blocks[y+1][x]);
                 }

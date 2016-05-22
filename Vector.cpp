@@ -46,7 +46,7 @@ Vector operator*(const Vector& v1, double d){
 Vector operator/(const Vector& v1, double d)
 {
     if(d != 0)
-        return Vector(v1.x/d, v1.x/d);
+        return Vector(v1.x/d, v1.y/d);
     else
         return Vector(NAN,NAN); // Poor solution
 }

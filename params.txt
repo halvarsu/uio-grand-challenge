@@ -1,7 +1,7 @@
 numBlocksX 57 Has no effect
 numBlocksY 31 Has no effect
 dt 1e-7
-tStop 0.01
+tStop 0.1
 t 0
 vPusher 4e-4
 kPusher 4e6
@@ -15,7 +15,7 @@ mu_d 0.17
 N 1
 numConnectors 1
 pusherBlockPosition 2 Has no effect
-filenameGeometry geoTest.txt
+filenameGeometry geo3x3.txt 
 filenamePositions output/positions.bin
 filenameVelocities output/velocities.bin
 filenameStates output/states.bin
