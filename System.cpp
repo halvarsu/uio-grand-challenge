@@ -187,8 +187,8 @@ void System::makeNormalForce()
     std::cout << "Increasing normal force...";
     const double dN = m_N / m_normalForceTime;
     for (double t = 0; t < m_normalForceTime; t += m_dt) {
-        m_f_N += (dN * t)/(m_numBlocksX*m_numBlocksY);
-        m_k_0 = sqrt(39.2e9*m_f_N);
+        m_f_N += (dN * t)/(m_numBlocksX*m_numBlocksY); // Under the assumption that the
+        m_k_0 = sqrt(39.2e9*m_f_N);       // entire top row is top blocks
         m_dynamicLength = m_mu_d * m_f_N / m_k_0;
         simulate();
     }

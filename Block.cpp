@@ -110,48 +110,27 @@ void Block::setNeighbourNullptr()
 
 Vector Block::calculateNeighbourForces(){
     Vector force(0,0);
-    for (int i = 0; i < m_neighboursCounter; i++) {
-        if(m_pNeighbours[i]) // May be nullptr
-        {
-            Vector tmp;
-            volatile Block *neighbour = m_pNeighbours[i];
-            switch (i) {
-            case 0: { // Bottom right
-                tmp = springForce(m_k/2, m_d*SQRT2, *m_pPosition,
-                                  *(neighbour->m_pPosition))
-                    + viscousForce(m_eta/2, *m_pVelocity,
-                                   *(neighbour->m_pVelocity));
-            }
-            case 1: { // Top right
-                tmp = springForce(m_k/2, m_d*SQRT2, *m_pPosition,
-                                  *(neighbour->m_pPosition))
-                    + viscousForce(m_eta/2, *m_pVelocity,
-                                *(neighbour->m_pVelocity));
-                break;
-            }
-            case 2: { // Right
-                tmp = springForce(m_k, m_d, *m_pPosition,
-                                  *(neighbour->m_pPosition))
-                    + viscousForce(m_eta, *m_pVelocity,
-                                   *(neighbour->m_pVelocity));
-                break;
-            }
-            case 3: { // Top
-                tmp = springForce(m_k, m_d, *m_pPosition,
-                                  *(neighbour->m_pPosition))
-                    + viscousForce(m_eta, *m_pVelocity,
-                                   *(neighbour->m_pVelocity));                
-                break;
-            }
-            default:
-                std::cerr << "This should not happend" << std::endl;
-                break;
-            }
-            // Add the opposite force to the neighbour
-            *(neighbour->m_pForce) -= tmp;
-
-            force = tmp;
+    for (unsigned int i=0; i < m_neighboursCounter; ++i){
+        if(!m_pNeighbours[i])
+            continue;
+        Vector tmp;
+        if(i == 0 || i == 1){ // Bottom right and top right
+            tmp = springForce(m_k/2, m_d*SQRT2, *m_pPosition,
+                              *(m_pNeighbours[i]->m_pPosition))
+                + viscousForce(m_eta/2, *m_pVelocity,
+                               *(m_pNeighbours[i]->m_pVelocity));
         }
+        else if(i == 2 || i == 3){ // Right and top
+            tmp = springForce(m_k, m_d, *m_pPosition,
+                              *(m_pNeighbours[i]->m_pPosition))
+                + viscousForce(m_eta, *m_pVelocity,
+                               *(m_pNeighbours[i]->m_pVelocity));
+        } else {
+            std::cerr << "Ncounter was larger than possible neighbours, "
+                      << m_neighboursCounter << std::endl;
+        }
+        *(m_pNeighbours[i]->m_pForce) -= tmp;
+        force += tmp;
     }
     return force;
 }
@@ -170,7 +149,6 @@ PusherBlock::PusherBlock(const System& system, const unsigned int row, const uns
 
 void PusherBlock::calculateForces()
 {
-    //  TODO: Try to make this spring force one dimensional
     Vector pusherPosition(m_vPusher.x * (*m_pT), m_pPosition->y);
     Vector pusherForce = *m_pDoPush * springForce(m_kPusher, 0, *m_pPosition,
     pusherPosition);
@@ -233,6 +211,8 @@ double BottomBlock::frictionForce()
     double friction;
     for(unsigned int i = 0; i < m_numConnectors; i++)
     {
+        if(!m_pFrictionForce)
+            break;
         *(m_pFrictionForce+i) = -springForce(*m_pk_0, 0, (m_connectors+i)->pos0, m_pPosition->x);
         if ((m_connectors+i)->state) {
             if (std::abs(*(m_pFrictionForce+i)) > m_mu_s * *m_pF_N) {
